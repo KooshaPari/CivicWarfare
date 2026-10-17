@@ -3,7 +3,7 @@
   "schema_version": 1,
   "subject": {
     "repository": "KooshaPari/CivicSurvival-public",
-    "commit": "REPLACE_WITH_FWD_HEAD_AFTER_COMMIT",
+    "commit": "00f063a22497d66b3d5123d52648aa0e829fe95a",
     "ref": "refs/heads/fix/civic-installer-file-size-20260904"
   },
   "environment": {
