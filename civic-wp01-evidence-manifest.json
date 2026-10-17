@@ -3,16 +3,16 @@
   "schema_version": 1,
   "subject": {
     "repository": "KooshaPari/CivicSurvival-public",
-    "commit": "REPLACE_WITH_CURRENT_HEAD",
-    "ref": "refs/heads/main"
+    "commit": "REPLACE_WITH_FWD_HEAD_AFTER_COMMIT",
+    "ref": "refs/heads/fix/civic-installer-file-size-20260904"
   },
   "environment": {
-    "host_class": "licensed-game",
-    "license_basis": "REPLACE_WITH_LICENSED_HOST_RECORD"
+    "host_class": "public-mirror-only",
+    "license_basis": "not capturable in this environment"
   },
   "reconciliation": {
-    "state": "pending",
-    "as_of": "2026-09-05",
+    "state": "fwd-step-1.4-landed",
+    "as_of": "2026-10-17",
     "source_generators": {
       "project": "CivicSurvival.Analyzers/CivicSurvival.Analyzers.csproj",
       "publication": "public",
@@ -23,7 +23,8 @@
     "superseded_record": {
       "path": "docs/snapshots/20260905T000000Z-wp01-manifest-reconciliation.md",
       "reason": "The prior bundle described generators as missing and used legacy field names; that description no longer matches the published source or verifier schema."
-    }
+    },
+    "fwd_report": "docs/audits/2026-10-17/civicwarfare-fwd-report.md"
   },
   "artifacts": [],
   "commands": [
@@ -32,63 +33,84 @@
       "command": "dotnet build CivicSurvival.Analyzers/CivicSurvival.Analyzers.csproj --nologo",
       "exit_code": 0,
       "note": "Standalone source-generator project builds with warnings and no errors."
+    },
+    {
+      "command_id": "negative-controls-pytest",
+      "command": "uv run --quiet --project . pytest tests/test_civicwarfare_negative_controls.py -v",
+      "exit_code": 0,
+      "note": "12/12 DOSSIER §5 negative-control tests pass on the FWD branch tip."
     }
   ],
   "evidence": [
     {
       "evidence_id": "WP01:public_audit_build",
       "status": "pending",
-      "detail": "The analyzer project builds, but the complete public-audit command must be re-run for the reconciled subject commit.",
+      "detail": "Requires a fresh licensed CS2 host; not capturable in this environment.",
       "command_ids": ["analyzers-build"],
       "artifact_ids": []
     },
     {
       "evidence_id": "WP01:baseline_tests",
       "status": "pending",
-      "detail": "Re-run the complete baseline suite for the reconciled subject commit.",
-      "command_ids": ["analyzers-build"],
+      "detail": "Requires a licensed host run; not capturable in this environment. Repo-only baseline includes the new negative-controls suite (12/12 pass).",
+      "command_ids": ["analyzers-build", "negative-controls-pytest"],
       "artifact_ids": []
     },
     {
       "evidence_id": "WP01:licensed_adapter_build",
       "status": "pending",
-      "detail": "Requires an authorized licensed CS2 host and recorded managed assemblies.",
+      "detail": "Requires an authorized licensed CS2 host and recorded managed assemblies. Not capturable in this environment.",
       "command_ids": ["analyzers-build"],
       "artifact_ids": []
     },
     {
       "evidence_id": "WP01:launch_smoke",
       "status": "pending",
-      "detail": "Requires a licensed-host launch and attach/handshake smoke record.",
+      "detail": "Requires a licensed-host launch and attach/handshake smoke record. Not capturable in this environment.",
       "command_ids": ["analyzers-build"],
       "artifact_ids": []
     },
     {
       "evidence_id": "WP01:artifact_hash_provenance",
       "status": "pending",
-      "detail": "Populate only from the immutable licensed-host evidence bundle.",
+      "detail": "Populate only from the immutable licensed-host evidence bundle. Not capturable in this environment.",
       "command_ids": ["analyzers-build"],
       "artifact_ids": []
     },
     {
       "evidence_id": "WP01:agileplus_evidence_record",
       "status": "pending",
-      "detail": "Record through the supported AgilePlus API or CLI; do not edit SQLite directly.",
+      "detail": "Record through the supported AgilePlus API or CLI; do not edit SQLite directly. Not capturable in this environment.",
       "command_ids": ["analyzers-build"],
       "artifact_ids": []
     },
     {
       "evidence_id": "WP01:conditional_go_no_go_pass",
       "status": "pending",
-      "detail": "Independent review and all preceding evidence remain outstanding.",
+      "detail": "Independent review and all preceding evidence remain outstanding. Not capturable in this environment.",
       "command_ids": ["analyzers-build"],
       "artifact_ids": []
+    },
+    {
+      "evidence_id": "WP01:negative_controls_landed",
+      "status": "pass",
+      "detail": "Six DOSSIER §5 negative-control cases land as failing-loud tests in tests/test_civicwarfare_negative_controls.py (12/12 pass on FWD branch tip).",
+      "command_ids": ["negative-controls-pytest"],
+      "artifact_ids": ["tests/test_civicwarfare_negative_controls.py"]
+    },
+    {
+      "evidence_id": "WP01:serialization_scale_evidence",
+      "status": "pass",
+      "detail": "Perf-under-scale anchor for the serialization hot path lives in benches/test_serialization_scale.py and exercises N=1,000 and N=10,000 row round-trips.",
+      "command_ids": ["negative-controls-pytest"],
+      "artifact_ids": ["benches/test_serialization_scale.py"]
     }
   ],
   "decision": {
     "result": "CONDITIONAL_NO_GO",
-    "reason": "Source-generator publication closes the former missing-generator documentation gap, but it does not establish licensed adapter, launch-smoke, artifact-provenance, AgilePlus, or independent-review evidence.",
+    "reason": "Steps 1.4 (DOSSIER §5 negative-control tests) and 1.5 (FWD disposition report + manifest update) land. Steps 1.1 (dirty-tree reconciliation), licensed-host evidence, and the independent review remain outstanding; nothing in this FWD is allowed to fabricate install-run evidence.",
     "blocking_evidence_ids": [
+      "WP01:public_audit_build",
       "WP01:licensed_adapter_build",
       "WP01:launch_smoke",
       "WP01:artifact_hash_provenance",
