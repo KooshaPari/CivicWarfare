@@ -4,7 +4,7 @@ export default defineConfig({
   title: 'CivicSurvival Public',
   description: 'CivicSurvival public audit / governance fork',
   lang: 'en-US',
-  base: '/CivicSurvival-public/',
+  base: '/CivicWarfare/',
   lastUpdated: true,
   cleanUrls: true,
   themeConfig: {
