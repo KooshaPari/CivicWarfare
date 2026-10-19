@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using Colossal.UI.Binding;
 using CivicSurvival.Core.Utils;
 
@@ -129,7 +128,7 @@ namespace CivicSurvival.Core.UI
         /// Try to get a typed binding by key.
         /// </summary>
         /// <returns>True if binding found and type matches, false otherwise</returns>
-        public bool TryGet<T>(string key, [NotNullWhen(true)] out ValueBinding<T>? binding)
+        public bool TryGet<T>(string key, out ValueBinding<T>? binding)
         {
             if (!_typedBindings.TryGetValue(key, out var obj))
             {
