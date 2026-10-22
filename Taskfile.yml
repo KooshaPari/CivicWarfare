@@ -1,0 +1,147 @@
+---
+# CivicSurvival Public -- Taskfile.yml
+#
+# Third task runner option. Uses go-task (https://taskfile.dev) -- a single
+# static Go binary with no runtime deps. Recipes are mirrored from Makefile
+# and Justfile so contributors can pick whichever runner is installed.
+#
+# Install:
+#   go install github.com/go-task/task/v3/cmd/task@latest
+#   scoop install go-task        # Windows
+#   brew install go-task         # macOS
+#   snap install task --classic  # Linux
+#
+# List recipes:
+#   task
+
+version: '3'
+
+vars:
+  PY: '{{.PY | default "python"}}'
+  DOTNET: '{{.DOTNET | default "dotnet"}}'
+  PYTEST: pytest
+  RUFF: '{{.RUFF | default "ruff"}}'
+  CSII_TOOLPATH: '{{.CSII_TOOLPATH | default (env "USERPROFILE" | default "/root")}}/AppData/LocalLow/Colossal Order/Cities Skylines II/.cache/Modding'
+  GAME_MANAGED_PATH: 'C:/Program Files (x86)/Steam/steamapps/common/Cities Skylines II/Cities2_Data/Managed'
+
+tasks:
+  default:
+    cmds:
+      - task --list
+    silent: true
+
+  test:
+    desc: Run pytest suite (excludes env-broken tests)
+    cmds:
+      - '{{.PYTEST}} -q --ignore=tests/public-audit --deselect=tests/test_ci_dependency_delta.py::test_hostile_dotnet_problem_fixture_makes_cli_exit_nonzero --deselect=tests/test_ci_dependency_delta.py::test_civic_quality_node_cache_supports_both_npm_lockfiles'
+
+  lint:
+    desc: Run ruff lint
+    cmds:
+      - '{{.RUFF}} check scripts tests'
+
+  format:
+    desc: Run ruff format (auto-fix)
+    cmds:
+      - '{{.RUFF}} format scripts tests'
+
+  format-check:
+    desc: Run ruff format --check (CI parity)
+    cmds:
+      - '{{.RUFF}} format --check scripts tests'
+
+  scorecard:
+    desc: Run the 88-pillar scorecard locally
+    cmds:
+      - '{{.PY}} scripts/scorecard_ci.py .'
+
+  scorecard-check:
+    desc: Run scorecard with --fail-on-drop against baseline
+    cmds:
+      - '{{.PY}} scripts/scorecard_ci.py . --fail-on-drop --baseline-file .github/scorecard-baseline.json'
+
+  release-current:
+    desc: Print current release version (errors on drift)
+    cmds:
+      - '{{.PY}} scripts/release.py current'
+
+  release-verify:
+    desc: Verify all version surfaces agree
+    cmds:
+      - '{{.PY}} scripts/release.py verify'
+
+  loc-audit:
+    desc: Run the localization regression suite (verbose)
+    cmds:
+      - '{{.PYTEST}} tests/test_localization_keys.py -v'
+
+  build:
+    desc: Build the mod DLL (Release, requires CS2 modding toolchain)
+    env:
+      CSII_TOOLPATH: '{{.CSII_TOOLPATH}}'
+    cmds:
+      - '{{.DOTNET}} build CivicSurvival/CivicSurvival.csproj -c Release -p:GameManagedPath={{.GAME_MANAGED_PATH}} -p:EnableCivicBurst=false'
+
+  build-dev:
+    desc: Fast dev build (Debug, skips NuGet restore)
+    env:
+      CSII_TOOLPATH: '{{.CSII_TOOLPATH}}'
+    cmds:
+      - '{{.DOTNET}} build CivicSurvival/CivicSurvival.csproj -c Debug -p:GameManagedPath={{.GAME_MANAGED_PATH}} -p:EnableCivicBurst=false --no-restore'
+
+  build-installer:
+    desc: Build the .NET 9 native installer (win-x64)
+    dir: installer
+    cmds:
+      - rm -rf bin obj dist
+      - '{{.DOTNET}} publish -c Release -r win-x64 --self-contained false -o dist'
+
+  build-installer-all:
+    desc: Build installer for all RIDs (win-x64, linux-x64, osx-arm64)
+    dir: installer
+    cmds:
+      - '{{.DOTNET}} publish -c Release -r win-x64 --self-contained false -o dist/win-x64'
+      - '{{.DOTNET}} publish -c Release -r linux-x64 --self-contained false -o dist/linux-x64'
+      - '{{.DOTNET}} publish -c Release -r osx-arm64 --self-contained false -o dist/osx-arm64'
+
+  install:
+    desc: Build mod + installer + install into CS2 (requires running game path)
+    deps: [build, build-installer]
+    cmds:
+      - installer/dist/civicsurvival-installer.exe install CivicSurvival/bin/Release/netstandard2.0/CivicSurvival.dll
+
+  update:
+    desc: Build + update existing install (preserves config)
+    deps: [build, build-installer]
+    cmds:
+      - installer/dist/civicsurvival-installer.exe update CivicSurvival/bin/Release/netstandard2.0/CivicSurvival.dll
+
+  remove:
+    desc: Full uninstall of the mod from CS2
+    cmds:
+      - installer/dist/civicsurvival-installer.exe remove
+
+  status-cs2:
+    desc: Discover CS2 install + verify BepInEx is present
+    cmds:
+      - installer/dist/civicsurvival-installer.exe check
+
+  status-mod:
+    desc: Show installed mod status
+    cmds:
+      - installer/dist/civicsurvival-installer.exe status
+
+  launch:
+    desc: Launch CS2 via the Steam URL handler
+    cmds:
+      - cmd /c start steam://run/949230
+    platforms:
+      - windows
+
+  ci:
+    desc: Full local CI parity (Python only)
+    cmds:
+      - task: lint
+      - task: format-check
+      - task: test
+      - task: scorecard
