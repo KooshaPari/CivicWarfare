@@ -3,158 +3,97 @@
   "schema_version": 1,
   "subject": {
     "repository": "KooshaPari/CivicSurvival-public",
-    "commit": "220d0f2fa3b85d444111bfeaccffe61799dd8623",
+    "commit": "REPLACE_WITH_CURRENT_HEAD",
     "ref": "refs/heads/main"
   },
   "environment": {
-    "os": "Windows 11 Pro Insider Preview 10.0.28120 Build 28120",
-    "architecture": "x64",
     "host_class": "licensed-game",
-    "license_basis": "Steam licensed Cities: Skylines II installation",
-    "cpu": "AMD Ryzen 7 5800X 8-Core (8 cores / 16 threads)",
-    "gpu": "NVIDIA GeForce RTX 3090 Ti",
-    "ram_mb": 65434,
-    "dotnet_sdks": ["6.0.201", "8.0.419", "9.0.317", "10.0.201", "10.0.303", "11.0.100-preview.2"],
-    "python": "3.14.5",
-    "cs2_version": "Unity 2022.3.71f1",
-    "cs2_assemblies_count": 105
+    "license_basis": "REPLACE_WITH_LICENSED_HOST_RECORD"
   },
-  "artifacts": [
-    {
-      "id": "contracts-dll-net8",
-      "path": "CivicSurvival.Contracts/bin/Debug/net8.0/CivicSurvival.Contracts.dll",
-      "sha256": "ea1ac8406d05661efdbc036151b063ba04e845eea28dc9f05479c1bee827038d",
-      "size_bytes": 362496
+  "reconciliation": {
+    "state": "pending",
+    "as_of": "2026-09-05",
+    "source_generators": {
+      "project": "CivicSurvival.Analyzers/CivicSurvival.Analyzers.csproj",
+      "publication": "public",
+      "client_reference": "CivicSurvival/CivicSurvival.csproj",
+      "verification": "dotnet build CivicSurvival.Analyzers/CivicSurvival.Analyzers.csproj --nologo",
+      "result": "pass_with_warnings"
     },
-    {
-      "id": "game-dll-reference",
-      "path": "C:/Program Files (x86)/Steam/steamapps/common/Cities Skylines II/Cities2_Data/Managed/Game.dll",
-      "sha256": "721e7e17bf74299aa2b988c1bd07e90874bb8bc72d263229500c4bf639e7e4ee",
-      "size_bytes": 12055552
+    "superseded_record": {
+      "path": "docs/snapshots/20260905T000000Z-wp01-manifest-reconciliation.md",
+      "reason": "The prior bundle described generators as missing and used legacy field names; that description no longer matches the published source or verifier schema."
     }
-  ],
+  },
+  "artifacts": [],
   "commands": [
     {
-      "id": "contracts-build-net80",
-      "command": "dotnet build CivicSurvival.Contracts/CivicSurvival.Contracts.csproj --framework net8.0",
+      "command_id": "analyzers-build",
+      "command": "dotnet build CivicSurvival.Analyzers/CivicSurvival.Analyzers.csproj --nologo",
       "exit_code": 0,
-      "note": "Builds successfully with 1 warning (SYSLIB0051 obsolete API)"
-    },
-    {
-      "id": "contracts-build-net48",
-      "command": "dotnet build CivicSurvival.Contracts/CivicSurvival.Contracts.csproj --framework net48",
-      "exit_code": 0,
-      "note": "Builds successfully, 0 warnings, 0 errors"
-    },
-    {
-      "id": "public-audit",
-      "command": "dotnet run --project CivicSurvival.PublicAudit -- --json .",
-      "exit_code": 0,
-      "output_json": {"status":"pass","contractsBuild":"pass","localizationParity":"pass","sourceRoots":"pass"}
-    },
-    {
-      "id": "quality-gate",
-      "command": "python -X utf8 scripts/civic_quality_gate.py --policy .github/civic-quality-policy.json --strict .",
-      "exit_code": 0,
-      "note": "All 12 quality rules pass"
-    },
-    {
-      "id": "adapter-build",
-      "command": "dotnet build CivicSurvival/CivicSurvival.csproj -c Debug --nologo -v minimal",
-      "exit_code": 1,
-      "error_count": 261,
-      "warning_count": 11,
-      "note": "261 errors from missing CivicSurvival.Analyzers source generators"
+      "note": "Standalone source-generator project builds with warnings and no errors."
     }
   ],
   "evidence": [
     {
-      "id": "WP01:public_audit_build",
-      "status": "pass",
-      "detail": "Contracts build, localization parity, source roots all green. Quality gate 12/12 pass."
+      "evidence_id": "WP01:public_audit_build",
+      "status": "pending",
+      "detail": "The analyzer project builds, but the complete public-audit command must be re-run for the reconciled subject commit.",
+      "command_ids": ["analyzers-build"],
+      "artifact_ids": []
     },
     {
-      "id": "WP01:baseline_tests",
-      "status": "pass",
-      "detail": "28/29 tests pass. 1 pre-existing failure (Python 3.14 Windows encoding issue in contract_check subprocess)."
+      "evidence_id": "WP01:baseline_tests",
+      "status": "pending",
+      "detail": "Re-run the complete baseline suite for the reconciled subject commit.",
+      "command_ids": ["analyzers-build"],
+      "artifact_ids": []
     },
     {
-      "id": "WP01:contracts_multi_target",
-      "status": "pass",
-      "detail": "CivicSurvival.Contracts builds for both net8.0 and net48. Framework mismatch resolved by PR #21."
+      "evidence_id": "WP01:licensed_adapter_build",
+      "status": "pending",
+      "detail": "Requires an authorized licensed CS2 host and recorded managed assemblies.",
+      "command_ids": ["analyzers-build"],
+      "artifact_ids": []
     },
     {
-      "id": "WP01:licensed_adapter_build",
-      "status": "fail",
-      "detail": "261 errors from missing source-generated code (CivicSurvival.Analyzers excluded from public snapshot by design). Framework mismatch resolved.",
-      "blocker": true
+      "evidence_id": "WP01:launch_smoke",
+      "status": "pending",
+      "detail": "Requires a licensed-host launch and attach/handshake smoke record.",
+      "command_ids": ["analyzers-build"],
+      "artifact_ids": []
     },
     {
-      "id": "WP01:launch_smoke",
-      "status": "blocked",
-      "detail": "Blocked by WP01:licensed_adapter_build failure.",
-      "blocker": true
+      "evidence_id": "WP01:artifact_hash_provenance",
+      "status": "pending",
+      "detail": "Populate only from the immutable licensed-host evidence bundle.",
+      "command_ids": ["analyzers-build"],
+      "artifact_ids": []
     },
     {
-      "id": "WP01:artifact_hash_provenance",
-      "status": "pass",
-      "detail": "Contracts DLL and Game.dll SHA-256 hashes captured."
+      "evidence_id": "WP01:agileplus_evidence_record",
+      "status": "pending",
+      "detail": "Record through the supported AgilePlus API or CLI; do not edit SQLite directly.",
+      "command_ids": ["analyzers-build"],
+      "artifact_ids": []
     },
     {
-      "id": "WP01:quality_gate",
-      "status": "pass",
-      "detail": "All 12 civic quality rules pass. External gate WP01 = pending."
-    },
-    {
-      "id": "WP01:openssf_scorecard",
-      "status": "pass",
-      "detail": "10+ consecutive SUCCESS runs. Invalid codeql-action SHA fixed in PR #12."
-    },
-    {
-      "id": "WP01:dependency_delta",
-      "status": "pass",
-      "detail": "Dependency delta scanner passes with .civicignore exclusions. CS2 Modding Toolkit gracefully handled."
+      "evidence_id": "WP01:conditional_go_no_go_pass",
+      "status": "pending",
+      "detail": "Independent review and all preceding evidence remain outstanding.",
+      "command_ids": ["analyzers-build"],
+      "artifact_ids": []
     }
   ],
   "decision": {
     "result": "CONDITIONAL_NO_GO",
-    "reason": "Public snapshot is not buildable end-to-end by design. Source generators excluded produce 261 compile errors. All audit-only gates pass. Framework mismatch resolved.",
+    "reason": "Source-generator publication closes the former missing-generator documentation gap, but it does not establish licensed adapter, launch-smoke, artifact-provenance, AgilePlus, or independent-review evidence.",
     "blocking_evidence_ids": [
       "WP01:licensed_adapter_build",
-      "WP01:launch_smoke"
-    ],
-    "resolved_blockers": [
-      {
-        "id": "framework-mismatch",
-        "description": "net48/net8.0 framework mismatch",
-        "resolution": "PR #21 multi-targeted CivicSurvival.Contracts to net8.0;net48"
-      },
-      {
-        "id": "openssf-scorecard",
-        "description": "33 consecutive failures",
-        "resolution": "PRs #11, #12 fixed invalid codeql-action SHA and triggers"
-      },
-      {
-        "id": "dependency-delta",
-        "description": "dotnet restore fails on CI without CS2 Modding Toolkit",
-        "resolution": ".civicignore manifest + graceful fallback in dependency_delta.py"
-      }
-    ],
-    "smallest_next_actions": [
-      "Path A: Publish CivicSurvival.Analyzers source generators to public snapshot",
-      "Path B: Build adapter from private repo and attach as release artifact",
-      "Path C: Publish compiled analyzer binaries only (not source)",
-      "Path D: Accept read-only snapshot (current state)"
+      "WP01:launch_smoke",
+      "WP01:artifact_hash_provenance",
+      "WP01:agileplus_evidence_record",
+      "WP01:conditional_go_no_go_pass"
     ]
-  },
-  "metadata": {
-    "collected_at_utc": "2026-09-01T00:00:00Z",
-    "collector": "Main-PC WP01 runtime-evidence manager",
-    "assessment_version": 3,
-    "toolchain_versions": {
-      "dotnet_sdk": "9.0.317",
-      "ruff": "0.16.5",
-      "python": "3.14.5"
-    }
   }
 }
