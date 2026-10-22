@@ -816,6 +816,8 @@ def test_ci_aggregate_gates_reject_failed_or_skipped_required_results():
     assert "continue-on-error" not in security_job
     assert "continue-on-error" not in dependency_job
     assert "actions/dependency-review-action" not in dependency_job
+    assert "actions/setup-python@" in dependency_job
+    assert "python3 -m pip install pip-audit" in dependency_job
     assert "python3 scripts/dependency_delta.py" in dependency_job
     assert "continue-on-error" not in python_job
     assert "ruff check scripts/dependency_delta.py tests/test_ci_dependency_delta.py" in python_job
