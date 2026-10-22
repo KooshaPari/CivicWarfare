@@ -1,4 +1,4 @@
-"""Fail-closed dependency scanners for changed Node and .NET manifests."""
+"""Fail-closed dependency scanners for changed Node, Python, and .NET manifests."""
 
 from __future__ import annotations
 
@@ -109,6 +109,22 @@ def _csharp_plan(repo: Path, changed_path: str) -> list[ScanCommand]:
             ),
         ),
     ]
+
+
+def _python_plan(repo: Path, changed_path: str) -> ScanCommand:
+    """Audit a changed Python project or requirements file with pip-audit."""
+    changed = _repo_path(repo, changed_path)
+    if changed.name == "requirements.txt":
+        return ScanCommand(
+            ecosystem="python",
+            cwd=changed.parent,
+            command=("python3", "-m", "pip_audit", "--strict", "-r", changed.name),
+        )
+    return ScanCommand(
+        ecosystem="python",
+        cwd=changed.parent,
+        command=("python3", "-m", "pip_audit", "--strict", "."),
+    )
 
 
 # MSBuild elements whose change does not alter the resolved package graph.
@@ -246,11 +262,11 @@ def build_scan_plan(
             "Pipfile.lock",
             "poetry.lock",
         }:
-            raise _unsupported(
-                changed_path,
-                "python",
-                "add a supported Python dependency scanner before changing this manifest",
-            )
+            command = _python_plan(repo, changed_path)
+            key = (command.ecosystem, command.cwd)
+            if key not in seen:
+                plan.append(command)
+                seen.add(key)
         elif name in {"yarn.lock", "pnpm-lock.yaml"}:
             raise _unsupported(
                 changed_path,

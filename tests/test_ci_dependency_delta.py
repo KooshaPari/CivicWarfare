@@ -177,6 +177,17 @@ def test_unsupported_manifest_fails_with_path_ecosystem_and_remedy(tmp_path):
     assert "scanner" in message
 
 
+def test_pyproject_change_runs_strict_python_audit(tmp_path):
+    module = load_module()
+    (tmp_path / "pyproject.toml").write_text("[project]\nname = 'civic'\n")
+
+    plan = module.build_scan_plan(tmp_path, ["pyproject.toml"])
+
+    assert [(item.ecosystem, item.cwd, item.command) for item in plan] == [
+        ("python", tmp_path, ("python3", "-m", "pip_audit", "--strict", "."))
+    ]
+
+
 def test_csharp_project_without_lockfile_fails_with_path_ecosystem_and_remedy(tmp_path):
     module = load_module()
     (tmp_path / "CivicSurvival.sln").write_text("Microsoft Visual Studio Solution File")
@@ -816,6 +827,8 @@ def test_ci_aggregate_gates_reject_failed_or_skipped_required_results():
     assert "continue-on-error" not in security_job
     assert "continue-on-error" not in dependency_job
     assert "actions/dependency-review-action" not in dependency_job
+    assert "actions/setup-python@" in dependency_job
+    assert "python3 -m pip install pip-audit" in dependency_job
     assert "python3 scripts/dependency_delta.py" in dependency_job
     assert "continue-on-error" not in python_job
     assert "ruff check scripts/dependency_delta.py tests/test_ci_dependency_delta.py" in python_job
