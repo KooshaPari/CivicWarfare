@@ -72,11 +72,20 @@ jobs:
         run: dotnet restore CivicSurvival/CivicSurvival.csproj
         env:
           GameManagedPath: ${{ vars.CITIES_MANAGED_PATH || 'C:/Program Files (x86)/Steam/steamapps/common/Cities Skylines II/Cities2_Data/Managed' }}
+          # CS2 Modding Toolkit env vars — required by CivicSurvival.csproj's <Import Project="Mod.props">
+          CSII_TOOLPATH: ${{ vars.CSII_TOOLPATH || 'C:/Users/koosh/AppData/LocalLow/Colossal Order/Cities Skylines II/.cache/Modding' }}
+          CSII_UNITYMODPROJECTPATH: ${{ vars.CSII_UNITYMODPROJECTPATH || 'C:/Users/koosh/AppData/LocalLow/Colossal Order/Cities Skylines II/.cache/Modding/UnityModsProject' }}
+          CSII_ENTITIESVERSION: ${{ vars.CSII_ENTITIESVERSION || '1.3.10' }}
+          CSII_MODPOSTPROCESSORPATH: ${{ vars.CSII_MODPOSTPROCESSORPATH || 'C:/Program Files (x86)/Steam/steamapps/common/Cities Skylines II/Cities2_Data/Content/Game/.ModdingToolchain/ModPostProcessor' }}
 
       - name: Build
         run: dotnet build CivicSurvival/CivicSurvival.csproj -c Release --no-restore
         env:
           GameManagedPath: ${{ vars.CITIES_MANAGED_PATH || 'C:/Program Files (x86)/Steam/steamapps/common/Cities Skylines II/Cities2_Data/Managed' }}
+          CSII_TOOLPATH: ${{ vars.CSII_TOOLPATH || 'C:/Users/koosh/AppData/LocalLow/Colossal Order/Cities Skylines II/.cache/Modding' }}
+          CSII_UNITYMODPROJECTPATH: ${{ vars.CSII_UNITYMODPROJECTPATH || 'C:/Users/koosh/AppData/LocalLow/Colossal Order/Cities Skylines II/.cache/Modding/UnityModsProject' }}
+          CSII_ENTITIESVERSION: ${{ vars.CSII_ENTITIESVERSION || '1.3.10' }}
+          CSII_MODPOSTPROCESSORPATH: ${{ vars.CSII_MODPOSTPROCESSORPATH || 'C:/Program Files (x86)/Steam/steamapps/common/Cities Skylines II/Cities2_Data/Content/Game/.ModdingToolchain/ModPostProcessor' }}
 
       - name: Package mod dll
         shell: bash

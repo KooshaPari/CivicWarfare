@@ -66,12 +66,24 @@ public class NullObjectGenerator : IIncrementalGenerator
                 m.ParameterList?.Parameters.Select(p => new ParameterInfo(p.Identifier.ValueText, p.Type?.ToFullString() ?? "object")).ToImmutableArray() ?? ImmutableArray<ParameterInfo>.Empty))
             .ToImmutableArray();
 
+        // Collect `using` directives from the compilation unit that
+        // contains the interface. The generated code needs the same
+        // usings so interface-typed members (e.g. `Range`, `Entity`)
+        // resolve at compile time.
+        var sourceUsings = interfaceDecl.SyntaxTree.GetCompilationUnitRoot()
+            .Usings
+            .Select(u => u.Name?.ToString())
+            .Where(s => !string.IsNullOrEmpty(s))
+            .Select(s => s!)
+            .ToImmutableArray();
+
         return new InterfaceInfo(
             interfaceSymbol.ContainingNamespace.ToDisplayString(),
             interfaceSymbol.Name,
             interfaceSymbol.TypeParameters.Select(t => t.Name).ToImmutableArray(),
             members,
-            methods);
+            methods,
+            sourceUsings);
     }
 
     private static void Execute(SourceProductionContext context, InterfaceInfo? info, Compilation compilation)
@@ -103,6 +115,16 @@ public class NullObjectGenerator : IIncrementalGenerator
         sb.AppendLine("using System.Collections.Generic;");
         sb.AppendLine("using System.Collections.Immutable;");
         sb.AppendLine("using System.Linq;");
+        // Forward the source interface's using directives so generated code
+        // can resolve interface-typed property/method return values that
+        // live in namespaces the interface itself imports.
+        if (info.SourceUsings != null)
+        {
+            foreach (var u in info.SourceUsings.OrderBy(x => x))
+            {
+                sb.AppendLine($"using {u};");
+            }
+        }
         sb.AppendLine();
         sb.AppendLine($"namespace {namespaceName}");
         sb.AppendLine("{");
@@ -178,7 +200,8 @@ public class NullObjectGenerator : IIncrementalGenerator
         string Name,
         ImmutableArray<string> TypeParameters,
         ImmutableArray<MemberInfo> Members,
-        ImmutableArray<MethodInfo> Methods);
+        ImmutableArray<MethodInfo> Methods,
+        ImmutableArray<string> SourceUsings);
 
     private record MemberInfo(string Name, string Type, bool HasGetter, bool HasSetter);
     private record MethodInfo(string Name, string ReturnType, ImmutableArray<ParameterInfo> Parameters);
