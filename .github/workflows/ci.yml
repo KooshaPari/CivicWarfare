@@ -130,12 +130,15 @@ jobs:
           python-version: "3.11"
       - name: Install test and lint tools
         run: python3 -m pip install pytest ruff
+      # The dependency delta gate is split across several modules, so every
+      # one of them is named here. Linting only the entry point would let a
+      # sibling module drift out of compliance without any check noticing.
       - name: Ruff check dependency delta
-        run: ruff check scripts/dependency_delta.py tests/test_ci_dependency_delta.py tests/test_public_audit_workflow.py tests/test_ci_action_pins.py
+        run: ruff check scripts/dependency_delta.py tests/test_ci_dependency_delta.py tests/test_public_audit_workflow.py tests/test_ci_action_pins.py scripts/dependency_trees.py scripts/audit_reports.py scripts/csproj_diff.py scripts/errors.py scripts/scan_types.py tests/test_independent_scanner_review.py tests/test_reviewer_probes.py
       - name: Ruff format dependency delta
-        run: ruff format --check scripts/dependency_delta.py tests/test_ci_dependency_delta.py tests/test_public_audit_workflow.py tests/test_ci_action_pins.py
+        run: ruff format --check scripts/dependency_delta.py tests/test_ci_dependency_delta.py tests/test_public_audit_workflow.py tests/test_ci_action_pins.py scripts/dependency_trees.py scripts/audit_reports.py scripts/csproj_diff.py scripts/errors.py scripts/scan_types.py tests/test_independent_scanner_review.py tests/test_reviewer_probes.py
       - name: Run hostile dependency delta fixtures
-        run: python3 -m pytest -q tests/test_ci_dependency_delta.py tests/test_public_audit_workflow.py tests/test_ci_action_pins.py
+        run: python3 -m pytest -q tests/test_ci_dependency_delta.py tests/test_public_audit_workflow.py tests/test_ci_action_pins.py tests/test_independent_scanner_review.py tests/test_reviewer_probes.py
 
   go:
     name: Go
