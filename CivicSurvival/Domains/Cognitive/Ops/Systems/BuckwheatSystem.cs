@@ -54,6 +54,9 @@ namespace CivicSurvival.Domains.Cognitive.Ops.Systems
     /// </summary>
     public partial class BuckwheatSystem : ThrottledSystemBase, IDefaultSerializable, IResettable, IPostLoadValidation, IBuckwheatAidReader, IActGatedSystem
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private const float LARGE_PROCUREMENT_THRESHOLD_TONS = 20.0f;
         private const float SATIRE_PROCUREMENT_THRESHOLD_TONS = 5f;
 

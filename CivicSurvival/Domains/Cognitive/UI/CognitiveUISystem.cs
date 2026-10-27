@@ -52,6 +52,9 @@ namespace CivicSurvival.Domains.Cognitive.UI
     [HandlesRequestKind(RequestKind.PropagandaCenterUpgrade)]
     public partial class CognitiveUISystem : CivicUIPanelSystem, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         // Propaganda Center readout fallbacks (mirror the balance contract defaults; used only before
         // the config loads).
         private const int FALLBACK_CENTER_COST = 150000;

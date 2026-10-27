@@ -33,6 +33,8 @@ namespace CivicSurvival.Domains.Narrative.Systems
     [ActIndependent]
     public partial class NarrativeNotificationSystem : ThrottledSystemBase, IInitializable
     {
+        public int InitOrder => CivicSurvival.Core.Interfaces.Core.InitPriority.DEFAULT;
+
         private static readonly LogContext Log = new("NarrativeNotificationSystem");
         private static readonly NarrativeTrigger[] s_AllTriggers = (NarrativeTrigger[])Enum.GetValues(typeof(NarrativeTrigger));
 
