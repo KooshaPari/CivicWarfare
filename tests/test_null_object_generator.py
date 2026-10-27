@@ -11,6 +11,11 @@ ROOT = Path(__file__).parents[1]
 
 
 def test_null_generator_compiles_and_executes_real_emitted_source(tmp_path):
+    result = run_generator_fixture(tmp_path, 'NullObjectGenerator', 'null_object_generator_driver')
+    assert 'null generator emitted-source behavior passed' in result
+
+
+def run_generator_fixture(tmp_path, generator, driver):
     dotnet = shutil.which('dotnet')
     if not dotnet:
         pytest.skip('Installed .NET 8 SDK is required')
@@ -31,8 +36,8 @@ def test_null_generator_compiles_and_executes_real_emitted_source(tmp_path):
     build = subprocess.run([
         dotnet, str(compiler), '-nologo', '-target:exe', '-nostdlib+',
         '-langversion:latest', '-nullable:enable', f'-out:{executable}',
-        *references, str(ROOT / 'CivicSurvival.Analyzers/Generators/NullObjectGenerator.cs'),
-        str(ROOT / 'tests/fixtures/null_object_generator_driver.cs'),
+        *references, str(ROOT / f'CivicSurvival.Analyzers/Generators/{generator}.cs'),
+        str(ROOT / f'tests/fixtures/{driver}.cs'),
     ], capture_output=True, text=True, timeout=45, check=False)
     assert build.returncode == 0, build.stdout + build.stderr
     executable.with_suffix('.runtimeconfig.json').write_text(json.dumps({
@@ -43,4 +48,4 @@ def test_null_generator_compiles_and_executes_real_emitted_source(tmp_path):
     result = subprocess.run([dotnet, str(executable), str(ROOT)],
                             capture_output=True, text=True, timeout=45, check=False)
     assert result.returncode == 0, result.stdout + result.stderr
-    assert 'null generator emitted-source behavior passed' in result.stdout
+    return result.stdout
