@@ -35,6 +35,9 @@ namespace CivicSurvival.Domains.Waves.Systems
     [ActIndependent]
     public partial class ThreatTargetSystem : CivicSystemBase, IThreatTargetReader, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("ThreatTargetSystem");
 
         private PrefabSystem m_PrefabSystem = null!;

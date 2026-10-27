@@ -31,6 +31,8 @@ namespace CivicSurvival.Core.Systems.Requests
     [ActIndependent]
     public partial class CommandRequestCleanupSystem : ThrottledSystemBase, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+
         private static readonly LogContext Log = new("CommandRequestCleanup");
 
         private ModCleanupBarrier m_ModCleanupBarrier = null!;

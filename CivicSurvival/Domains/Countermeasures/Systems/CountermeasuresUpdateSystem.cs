@@ -63,6 +63,9 @@ namespace CivicSurvival.Domains.Countermeasures.Systems
         , ICountermeasuresDebugMutator
 #endif
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("Countermeasures");
         private const int JOURNALIST_COUNT_FALLBACK = 5;
         private const int MISSING_CORRUPTION_ERROR_FRAME_THRESHOLD = 60;

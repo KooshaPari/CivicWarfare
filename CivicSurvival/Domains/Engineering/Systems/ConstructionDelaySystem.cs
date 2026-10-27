@@ -39,6 +39,8 @@ namespace CivicSurvival.Domains.Engineering.Systems
     [ActIndependent]
     public partial class ConstructionDelaySystem : ThrottledSystemBase, IDefaultSerializable, IResettable, IPostLoadValidation
     {
+        public void PurgeAfterLoad() { }
+
         // ECB command counter (encapsulated to avoid CA2211)
         private static int s_EcbCommandCount;
         public static int EcbCommandCount => Volatile.Read(ref s_EcbCommandCount);

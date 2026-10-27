@@ -39,6 +39,9 @@ namespace CivicSurvival.Domains.PowerBackup.Systems
     public partial class BackupPowerDistributionSystem : ThrottledSystemBase, IPostLoadValidation
 #pragma warning restore CA1001
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("BackupPowerDistribution");
         private const uint LCG_MULTIPLIER = 1103515245u;
         private const uint FRAME_MIX_MULTIPLIER = 2654435769u;

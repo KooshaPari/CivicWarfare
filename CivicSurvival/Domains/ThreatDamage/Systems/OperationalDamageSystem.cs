@@ -66,6 +66,8 @@ namespace CivicSurvival.Domains.ThreatDamage.Systems
     [TransientConsumerReconcile(typeof(RepairCompletedEvent), ReconcileMode.OwnsDurableOutbox, DurableState = typeof(PowerPlantDamage))]
     public partial class OperationalDamageSystem : CivicSystemBase, IDefaultSerializable, IResettable, IPostLoadValidation, IOperationalDamageRepairSink
     {
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("OperationalDamageSystem");
 
         // Throttle: same pattern as BlackoutSystem.

@@ -25,6 +25,8 @@ namespace CivicSurvival.Domains.Narrative.Resolvers
     public sealed class CognitiveNarrativeResolver : INarrativeResolver
 #pragma warning restore CIVIC252
     {
+        public void NotifyDeserialized() { }
+
         public string Domain => "Cognitive";
 
         private static readonly LogContext Log = new("CognitiveNarrativeResolver");

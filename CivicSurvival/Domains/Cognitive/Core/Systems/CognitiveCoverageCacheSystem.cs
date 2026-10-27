@@ -34,6 +34,9 @@ namespace CivicSurvival.Domains.Cognitive.Core.Systems
     [ActIndependent]
     public sealed partial class CognitiveCoverageCacheSystem : ThrottledSystemBase, ICognitiveCoverageReader, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("CognitiveCoverageCacheSystem");
 
         protected override int UpdateInterval => Engine.Timing.UPDATE_INTERVAL_1_SECOND;

@@ -54,6 +54,9 @@ namespace CivicSurvival.Domains.Waves.Systems
     [ActIndependent]
     public partial class WaveExecutor : CivicSystemBase, IResettable, IPostLoadValidation, ICivicSingletonOwner<WaveStateSingleton>
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         // ECB command counter (encapsulated to avoid CA2211)
         // FIX S14_CODE1:74: Use Interlocked for both read and reset (was mixing atomic/non-atomic)
         private static int s_EcbCommandCount;

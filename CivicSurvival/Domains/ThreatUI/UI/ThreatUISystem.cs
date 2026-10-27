@@ -49,6 +49,9 @@ namespace CivicSurvival.Domains.ThreatUI.UI
 #pragma warning disable CIVIC098 // ModalCoordinator.Instance is static readonly = new(), never null
     public partial class ThreatUISystem : CivicUIPanelSystem, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         // Dependencies
         private EntityQuery m_WaveStateQuery;
         private EntityQuery m_ThreatStatsQuery;

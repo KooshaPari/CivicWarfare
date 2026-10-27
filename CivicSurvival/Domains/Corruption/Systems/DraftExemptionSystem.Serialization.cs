@@ -18,6 +18,9 @@ namespace CivicSurvival.Domains.Corruption.Systems
     #pragma warning disable CIVIC223 // PostLoadValidationSystem invokes ICivicSingletonOwner.OnLoadRestore; Deserialize only buffers payload.
     public partial class DraftExemptionSystem : IDefaultSerializable, IResettable, IBootDefaultsReset, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         public void ResetToBootDefaults(ResetReason reason) => ResetBootDefaultsFields();
 
     #pragma warning restore CIVIC223

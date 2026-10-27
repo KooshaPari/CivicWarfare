@@ -21,6 +21,8 @@ namespace CivicSurvival.Core.Systems
     [ActIndependent]
     public partial class IsolatedGridHandlerSystem : SystemBase, IPostLoadValidation
     {
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("IsolatedGridHandler");
         private const int IMPORT_LIMIT_LOG_INTERVAL_FRAMES = 60;
 

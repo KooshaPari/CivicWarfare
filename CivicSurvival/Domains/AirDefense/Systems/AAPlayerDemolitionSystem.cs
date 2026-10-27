@@ -58,6 +58,9 @@ namespace CivicSurvival.Domains.AirDefense.Systems
     [ActIndependent]
     public partial class AAPlayerDemolitionSystem : CivicSystemBase, IResettable, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("AAPlayerDemolition");
 
         private EntityQuery m_AAQuery;

@@ -63,6 +63,12 @@
         <AssemblyMetadata Include="CivicTestModVersion" Value="$(CivicTestModVersion)" Condition="'$(CivicTestModVersion)' != ''" />
     </ItemGroup>
 
+    <!-- Generator hint names contain subdirectories that Roslyn does not create. -->
+    <Target Name="PrepareCivicGeneratedDirectories" BeforeTargets="CoreCompile"
+            Condition="'$(EmitCompilerGeneratedFiles)' == 'true'">
+        <MakeDir Directories="$(CompilerGeneratedFilesOutputPath)\SystemGenerator\Unity.Entities.SourceGen.SystemGenerator.SystemGenerator;$(CompilerGeneratedFilesOutputPath)\JobEntityGenerator\Unity.Entities.SourceGen.JobEntityGenerator.JobEntityGenerator;$(CompilerGeneratedFilesOutputPath)\CivicSurvival.Analyzers\CivicSurvival.Analyzers.Generators.NullObjectGenerator" />
+    </Target>
+
     <!-- Localization files -->
     <ItemGroup>
         <EmbeddedResource Include="Localization\en-US.json" />
