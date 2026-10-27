@@ -9,9 +9,11 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace CivicSurvival.Analyzers.Generators;
 
+/// <summary>Emits immutable null objects using each interface's declared fallback values.</summary>
 [Generator]
 public class NullObjectGenerator : IIncrementalGenerator
 {
+    /// <inheritdoc />
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         var nullObjectInterfaces = context.SyntaxProvider
@@ -53,17 +55,19 @@ public class NullObjectGenerator : IIncrementalGenerator
             .OfType<PropertyDeclarationSyntax>()
             .Select(p => new MemberInfo(
                 p.Identifier.ValueText,
-                p.Type?.ToFullString() ?? "object",
+                p.Type.ToString().Trim(),
                 p.AccessorList?.Accessors.Any(a => a.IsKind(SyntaxKind.GetAccessorDeclaration)) ?? false,
-                p.AccessorList?.Accessors.Any(a => a.IsKind(SyntaxKind.SetAccessorDeclaration)) ?? false))
+                p.AccessorList?.Accessors.Any(a => a.IsKind(SyntaxKind.SetAccessorDeclaration)) ?? false,
+                GetReturnValue(p.Type, p.AttributeLists)))
             .ToImmutableArray();
 
         var methods = interfaceDecl.Members
             .OfType<MethodDeclarationSyntax>()
             .Select(m => new MethodInfo(
                 m.Identifier.ValueText,
-                m.ReturnType?.ToFullString() ?? "void",
-                m.ParameterList?.Parameters.Select(p => new ParameterInfo(p.Identifier.ValueText, p.Type?.ToFullString() ?? "object")).ToImmutableArray() ?? ImmutableArray<ParameterInfo>.Empty))
+                m.ReturnType.ToString().Trim(),
+                m.ParameterList.Parameters.Select(p => new ParameterInfo(p.Identifier.Text, p.Type?.ToString().Trim() ?? "object")).ToImmutableArray(),
+                GetReturnValue(m.ReturnType, m.AttributeLists)))
             .ToImmutableArray();
 
         // Collect `using` directives from the compilation unit that
@@ -72,7 +76,7 @@ public class NullObjectGenerator : IIncrementalGenerator
         // resolve at compile time.
         var sourceUsings = interfaceDecl.SyntaxTree.GetCompilationUnitRoot()
             .Usings
-            .Select(u => u.Name?.ToString())
+            .Select(u => u.WithoutTrivia().ToString())
             .Where(s => !string.IsNullOrEmpty(s))
             .Select(s => s!)
             .ToImmutableArray();
@@ -81,6 +85,7 @@ public class NullObjectGenerator : IIncrementalGenerator
             interfaceSymbol.ContainingNamespace.ToDisplayString(),
             interfaceSymbol.Name,
             interfaceSymbol.TypeParameters.Select(t => t.Name).ToImmutableArray(),
+            string.Join(" ", interfaceDecl.ConstraintClauses.Select(c => c.ToString())),
             members,
             methods,
             sourceUsings);
@@ -97,10 +102,10 @@ public class NullObjectGenerator : IIncrementalGenerator
 
     private static string GenerateNullObjectClass(InterfaceInfo info)
     {
-        var className = $"Null{info.Name}";
+        var className = $"Null{(info.Name.StartsWith("I", StringComparison.Ordinal) ? info.Name.Substring(1) : info.Name)}";
         var namespaceName = info.Namespace;
         var typeParams = info.TypeParameters.Length > 0 ? $"<{string.Join(", ", info.TypeParameters)}>" : "";
-        var typeConstraints = info.TypeParameters.Length > 0 ? $" where {string.Join(" where ", info.TypeParameters.Select(t => $"{t} : class"))}" : "";
+        var typeConstraints = info.TypeConstraints.Length > 0 ? " " + info.TypeConstraints : "";
 
         var members = info.Members;
         var methods = info.Methods;
@@ -109,12 +114,8 @@ public class NullObjectGenerator : IIncrementalGenerator
         sb.AppendLine("// GENERATED - DO NOT EDIT");
         sb.AppendLine($"// Source: {info.Name}");
         sb.AppendLine($"// Generator: CivicSurvival.Analyzers.NullObjectGenerator");
-        sb.AppendLine($"// GeneratedAt: {DateTime.UtcNow:yyyy-MM-ddTHH:mm:ssZ}");
+        sb.AppendLine("#nullable enable");
         sb.AppendLine();
-        sb.AppendLine("using System;");
-        sb.AppendLine("using System.Collections.Generic;");
-        sb.AppendLine("using System.Collections.Immutable;");
-        sb.AppendLine("using System.Linq;");
         // Forward the source interface's using directives so generated code
         // can resolve interface-typed property/method return values that
         // live in namespaces the interface itself imports.
@@ -122,7 +123,7 @@ public class NullObjectGenerator : IIncrementalGenerator
         {
             foreach (var u in info.SourceUsings.OrderBy(x => x))
             {
-                sb.AppendLine($"using {u};");
+                sb.AppendLine(u);
             }
         }
         sb.AppendLine();
@@ -131,22 +132,30 @@ public class NullObjectGenerator : IIncrementalGenerator
         sb.AppendLine($"    /// <summary>");
         sb.AppendLine($"    /// Null object implementation for {info.Name}. Returns default/empty values for all members.");
         sb.AppendLine($"    /// </summary>");
-        sb.AppendLine($"    public sealed class {className}{typeParams} : {info.Name}{typeParams}{typeConstraints}");
+        sb.AppendLine($"    internal sealed class {className}{typeParams} : {info.Name}{typeParams}{typeConstraints}");
         sb.AppendLine("    {");
+        // Generic service lookup must infer the owned interface, not the implementation
+        // class (which has neither the registry key nor OwnedByFeatureId metadata).
+        sb.AppendLine($"        public static readonly {info.Name}{typeParams} Instance = new {className}{typeParams}();");
+        sb.AppendLine($"        private {className}() {{ }}");
 
         // Generate property implementations
         foreach (var member in members)
         {
             var returnType = member.Type;
-            var defaultValue = GetDefaultValue(returnType);
+            var defaultValue = member.DefaultValue;
 
             if (member.HasGetter && member.HasSetter)
             {
-                sb.AppendLine($"        public {returnType} {member.Name} {{ get; set; }} = {defaultValue};");
+                sb.AppendLine($"        public {returnType} {member.Name} {{ get => {defaultValue}; set {{ }} }}");
             }
             else if (member.HasGetter)
             {
                 sb.AppendLine($"        public {returnType} {member.Name} => {defaultValue};");
+            }
+            else if (member.HasSetter)
+            {
+                sb.AppendLine($"        public {returnType} {member.Name} {{ set {{ }} }}");
             }
         }
 
@@ -154,7 +163,7 @@ public class NullObjectGenerator : IIncrementalGenerator
         foreach (var method in methods)
         {
             var returnType = method.ReturnType;
-            var defaultValue = GetDefaultValue(returnType);
+            var defaultValue = method.DefaultValue;
             var parameters = string.Join(", ", method.Parameters.Select(p => $"{p.Type} {p.Name}"));
 
             sb.AppendLine($"        public {returnType} {method.Name}({parameters})");
@@ -172,38 +181,53 @@ public class NullObjectGenerator : IIncrementalGenerator
         return sb.ToString();
     }
 
-    private static string GetDefaultValue(string type)
+    private static string GetReturnValue(TypeSyntax returnType, SyntaxList<AttributeListSyntax> lists)
     {
-        // Handle common types
-        return type switch
+        var type = returnType.ToString().Trim();
+        foreach (var attribute in lists.SelectMany(list => list.Attributes))
         {
-            "string" => "string.Empty",
-            "bool" => "false",
-            "int" or "int32" or "System.Int32" => "0",
-            "long" or "int64" or "System.Int64" => "0L",
-            "float" or "single" or "System.Single" => "0f",
-            "double" or "System.Double" => "0.0",
-            "decimal" or "System.Decimal" => "0m",
-            "Guid" or "System.Guid" => "Guid.Empty",
-            "DateTime" or "System.DateTime" => "default",
-            "DateTimeOffset" or "System.DateTimeOffset" => "default",
-            "TimeSpan" or "System.TimeSpan" => "default",
-            _ when type.EndsWith("?") => "null",
-            _ when type.StartsWith("IEnumerable<") || type.StartsWith("IList<") || type.StartsWith("IReadOnlyList<") || type.StartsWith("ImmutableArray<") || type.StartsWith("ImmutableList<") => "ImmutableArray<T>.Empty", // simplified
-            _ when type.StartsWith("List<") || type.StartsWith("Dictionary<") || type.StartsWith("HashSet<") => "new " + type + "()",
-            _ => "default"
-        };
+            var name = attribute.Name.ToString().Split('.').Last();
+            if (name.EndsWith("Attribute", StringComparison.Ordinal))
+                name = name.Substring(0, name.Length - "Attribute".Length);
+            if (name == "NullReturn" && attribute.ArgumentList?.Arguments.Count == 1)
+                return attribute.ArgumentList.Arguments[0].Expression.ToString();
+            if (name == "NullReturnNull")
+                return "null";
+            if (name == "NullReturnEmpty")
+            {
+                if (returnType is ArrayTypeSyntax array)
+                    return $"global::System.Array.Empty<{array.ElementType}>()";
+                var generic = returnType.DescendantNodesAndSelf().OfType<GenericNameSyntax>().FirstOrDefault();
+                if (generic != null && generic.TypeArgumentList.Arguments.Count == 1)
+                {
+                    var element = generic.TypeArgumentList.Arguments[0];
+                    if (generic.Identifier.ValueText == "ImmutableArray" || generic.Identifier.ValueText == "ImmutableList")
+                        return $"{type}.Empty";
+                    if (generic.Identifier.ValueText.StartsWith("I", StringComparison.Ordinal))
+                        return $"global::System.Array.Empty<{element}>()";
+                }
+                return $"new {type}()";
+            }
+            if (name == "NullReturnCompletedDefault")
+            {
+                var generic = returnType.DescendantNodesAndSelf().OfType<GenericNameSyntax>().FirstOrDefault();
+                return generic == null ? "global::System.Threading.Tasks.Task.CompletedTask"
+                    : $"global::System.Threading.Tasks.Task.FromResult(default({generic.TypeArgumentList.Arguments[0]}))";
+            }
+        }
+        return "default";
     }
 
     private record InterfaceInfo(
         string Namespace,
         string Name,
         ImmutableArray<string> TypeParameters,
+        string TypeConstraints,
         ImmutableArray<MemberInfo> Members,
         ImmutableArray<MethodInfo> Methods,
         ImmutableArray<string> SourceUsings);
 
-    private record MemberInfo(string Name, string Type, bool HasGetter, bool HasSetter);
-    private record MethodInfo(string Name, string ReturnType, ImmutableArray<ParameterInfo> Parameters);
+    private record MemberInfo(string Name, string Type, bool HasGetter, bool HasSetter, string DefaultValue);
+    private record MethodInfo(string Name, string ReturnType, ImmutableArray<ParameterInfo> Parameters, string DefaultValue);
     private record ParameterInfo(string Name, string Type);
 }
