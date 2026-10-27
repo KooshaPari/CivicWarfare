@@ -252,14 +252,17 @@ namespace CivicSurvival.Domains.Network.Systems
                 // the server holds a real nickname (e.g. after a fresh install, cleared ModData,
                 // or a save moved between machines — local copy empty, server still has the name).
                 //
-                // Gated on Initialized (the player has, at some point, set a nickname). This is
-                // also what keeps the reconcile safe against an older server that still substitutes
-                // the synthetic "Mayor_XXXX" display fallback: for a never-set player that server
-                // reports Initialized=false, so the fallback is never written into the field. Once
-                // the server returns the stored value verbatim, an empty Nickname under
-                // Initialized=true is a genuine cleared value and the local copy follows it.
+                // Defense in depth: the client NEVER writes a synthetic display fallback into
+                // the local field. The current server contract reports Initialized=false for
+                // never-set players, and TelemetryAuth.NicknameRegistrationResult already drops
+                // any "Mayor_XXXX" pattern defensively before it reaches us. The IsSyntheticFallback
+                // re-check here is the last-mile guard against any older server build that
+                // still emits the synthetic display name. The UI surfaces "nickname not set"
+                // (an honest "not signed in" state) for a never-set player — no fabricated
+                // identity is ever persisted or rendered.
                 if (m_Settings != null
                     && budget.Initialized
+                    && !TelemetryAuth.NicknameRegistrationResult.IsSyntheticFallback(budget.Nickname)
                     && budget.Nickname != m_Settings.PlayerNickname)
                 {
                     m_Settings.ApplyPatch(ModSettingsPatch.SetPlayerNickname(budget.Nickname));
