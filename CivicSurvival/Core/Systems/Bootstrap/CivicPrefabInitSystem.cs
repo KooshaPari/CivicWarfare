@@ -70,6 +70,8 @@ namespace CivicSurvival.Core.Systems.Bootstrap
     [ActIndependent]
     public partial class CivicPrefabInitSystem : CivicSystemBase, IInitializable
     {
+        public int InitOrder => CivicSurvival.Core.Interfaces.Core.InitPriority.DEFAULT;
+
         private static readonly LogContext Log = new("CivicPrefabInitSystem");
 
         private PrefabSystem m_PrefabSystem = null!;

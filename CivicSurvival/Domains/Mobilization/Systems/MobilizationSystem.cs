@@ -49,6 +49,9 @@ namespace CivicSurvival.Domains.Mobilization.Systems
         , IMobilizationDebugMutator
 #endif
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("MobilizationSystem");
 
         private DistrictPenaltySystem? m_PenaltySystem;

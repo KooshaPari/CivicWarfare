@@ -33,6 +33,8 @@ namespace CivicSurvival.Domains.Engineering.Systems
     public partial class PlantRepairRequestProcessor : CivicSystemBase,
         IPostLoadValidation, IPlantRepairIntentReader, IResettable, IBootDefaultsReset
     {
+        public void PurgeAfterLoad() { }
+
         private static int s_EcbCommandCount;
         public static int EcbCommandCount => Volatile.Read(ref s_EcbCommandCount);
         public static void ResetCounters() => Interlocked.Exchange(ref s_EcbCommandCount, 0);

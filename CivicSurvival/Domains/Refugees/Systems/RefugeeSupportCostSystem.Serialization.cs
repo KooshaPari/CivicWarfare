@@ -13,6 +13,9 @@ namespace CivicSurvival.Domains.Refugees.Systems
     /// </summary>
     public partial class RefugeeSupportCostSystem : IDefaultSerializable, IResettable, IPostLoadValidation, IBootDefaultsReset
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         public void ResetToBootDefaults(ResetReason reason) => ResetState();
 
         public void SetDefaults(Context context) => ResetState();

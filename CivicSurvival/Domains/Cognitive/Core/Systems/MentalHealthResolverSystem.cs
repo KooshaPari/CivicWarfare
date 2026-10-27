@@ -54,6 +54,9 @@ namespace CivicSurvival.Domains.Cognitive.Core.Systems
     public partial class MentalHealthResolverSystem : CivicSystemBase, IResettable, IPostLoadValidation
 #pragma warning restore CIVIC076
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("MentalHealthResolverSystem");
 
         // Simulation-tick based throttle (FPS-independent, like vanilla CitizenHappinessSystem)

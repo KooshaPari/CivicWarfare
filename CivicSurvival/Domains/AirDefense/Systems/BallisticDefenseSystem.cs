@@ -45,6 +45,9 @@ namespace CivicSurvival.Domains.AirDefense.Systems
     [ActIndependent]
     public partial class BallisticDefenseSystem : CivicSystemBase, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("BallisticDefenseSystem");
 
         // C-5: 4th self-defending consumer. A stale post-load ballistic snapshot

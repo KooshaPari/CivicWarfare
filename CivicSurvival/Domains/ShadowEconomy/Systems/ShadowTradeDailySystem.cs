@@ -61,6 +61,9 @@ namespace CivicSurvival.Domains.ShadowEconomy.Systems
         DisposePhase = SingletonLifecyclePhase.OnDestroy)]
     public partial class ShadowTradeDailySystem : CivicSystemBase, IDefaultSerializable, IResettable, IPostLoadValidation, IShadowTradeConsumerReadiness, IActGatedSystem
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private const float FALLBACK_SHADOW_IMPORT_PRICE = 600f;
         // R9-M12 FIX: Read from config (was hardcoded 25f, must match CountermeasuresConfig.SuspicionThreshold)
         private static float SUSPICION_CORRUPTION_THRESHOLD => BalanceConfig.Current.Countermeasures.SuspicionThreshold;

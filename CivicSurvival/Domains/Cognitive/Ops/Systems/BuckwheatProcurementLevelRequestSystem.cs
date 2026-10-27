@@ -26,6 +26,9 @@ namespace CivicSurvival.Domains.Cognitive.Ops.Systems
         Justification = "Transient UI command: before this consumer applies it no durable procurement-level state has changed, so a load-window loss is intentionally reissuable.")]
     public partial class BuckwheatProcurementLevelRequestSystem : EmittingRequestProcessor<BuckwheatProcurementLevelRequest>, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("BuckwheatProcurementLevelRequestSystem");
         private static readonly int[] ProcurementPresets = { 0, 25, 50, 75, 100 };
 

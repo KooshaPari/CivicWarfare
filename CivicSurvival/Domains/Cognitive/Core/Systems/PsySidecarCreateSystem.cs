@@ -41,6 +41,9 @@ namespace CivicSurvival.Domains.Cognitive.Core.Systems
     public partial class PsySidecarCreateSystem : CivicSystemBase, IResettable, IPostLoadValidation
 #pragma warning restore CIVIC076
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("PsySidecarCreateSystem");
 
         // PsySlot round-robin: must match the 4-slot layout MHR's fire cycle walks (PsySlot doc).

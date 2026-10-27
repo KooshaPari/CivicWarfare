@@ -43,6 +43,9 @@ namespace CivicSurvival.Core.Systems
         Justification = "Transient diagnostic command: the sweep only reads state and writes a transient result singleton, so a pre-consume load loss is reissuable from the panel.")]
     public partial class CrisisSweepSystem : CivicSystemBase, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("CrisisSweep");
 
         // The forecast model (archetype presets, the three Run methods, the modeling consts) lives in

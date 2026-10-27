@@ -21,6 +21,8 @@ namespace CivicSurvival.Domains.Narrative.Resolvers
     public sealed class FirstStrikeNarrativeResolver : INarrativeResolver
 #pragma warning restore CIVIC252
     {
+        public void NotifyDeserialized() { }
+
         public string Domain => "FirstStrike";
 
         private static readonly LogContext Log = new("FirstStrikeNarrativeResolver");

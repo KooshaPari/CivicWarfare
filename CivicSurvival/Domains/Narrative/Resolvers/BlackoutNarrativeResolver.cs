@@ -28,6 +28,8 @@ namespace CivicSurvival.Domains.Narrative.Resolvers
     public sealed class BlackoutNarrativeResolver : INarrativeResolver
 #pragma warning restore CIVIC252
     {
+        public void NotifyDeserialized() { }
+
         public string Domain => "Blackout";
 
         private static readonly LogContext Log = new("BlackoutNarrativeResolver");

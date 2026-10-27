@@ -45,6 +45,8 @@ namespace CivicSurvival.Core.Systems
     [ActIndependent]
     public partial class PsyOrphanScanSystem : CivicSystemBase, IPostLoadValidation
     {
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("PsyOrphanScanSystem");
         // Effective cadence of the former MECS batch 0 (0.25s throttle × 1-of-4 rotation).
         private const float THROTTLE_INTERVAL = 1.0f;

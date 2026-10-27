@@ -40,6 +40,8 @@ namespace CivicSurvival.Domains.Engineering.Systems
         DisposePhase = SingletonLifecyclePhase.None)]
     public partial class PowerCapacityResolverSystem : ThrottledSystemBase, IPowerCapacityPipeline, IPowerCapacitySnapshotReader, IImportCapVersionReader, IPostLoadValidation, ICivicSingletonOwner<DemandPeakSingleton>
     {
+        public void PurgeAfterLoad() { }
+
         private const uint FLOW_CYCLE_FRAMES = 128u;
         private const int FLOW_APPLY_PHASE_START = 126;
 
