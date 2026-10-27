@@ -77,6 +77,9 @@ namespace CivicSurvival.Domains.Attention.Systems
         , IExodusDebugMutator
 #endif
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("ExodusSystem");
         private WorldShockSystem m_WorldShockSystem = null!;
         private GameSimulationEndBarrier m_GameSimulationEndBarrier = null!;

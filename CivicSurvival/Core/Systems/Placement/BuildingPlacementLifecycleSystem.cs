@@ -23,6 +23,9 @@ namespace CivicSurvival.Core.Systems.Placement
     [ActIndependent]
     public partial class BuildingPlacementLifecycleSystem : CivicSystemBase, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private const int CancelGraceFrames = 2;
         private static readonly LogContext Log = new("BuildingPlacementLifecycle");
 

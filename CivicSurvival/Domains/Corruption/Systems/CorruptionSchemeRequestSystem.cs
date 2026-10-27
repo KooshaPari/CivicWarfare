@@ -37,6 +37,9 @@ namespace CivicSurvival.Domains.Corruption.Systems
         Justification = "Transient UI command: emergency-fund/fuel-siphon settings are changed only inside this consumer, so pre-consume load loss has no committed durable side-effect.")]
     public partial class CorruptionSchemeRequestSystem : EmittingRequestProcessor<CorruptionSchemeRequest>, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("CorruptionSchemeRequestSystem");
 
         private static readonly int[] FuelSiphonPresets = { 0, 15, 30, 50 };

@@ -8,6 +8,9 @@ namespace CivicSurvival.Domains.Engineering.Systems
 {
     public partial class WinterMultiplierSystem : IDefaultSerializable, IResettable, IBootDefaultsReset, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         [System.NonSerialized] private bool m_PendingBootDefaultWinterRestore;
 
         public void ResetToBootDefaults(ResetReason reason)

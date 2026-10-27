@@ -48,6 +48,9 @@ namespace CivicSurvival.Domains.ThreatDamage.Systems
     /// </summary>
     public partial class CivilianDamageSystem : CivicSystemBase, IDefaultSerializable, IResettable, ICivilianDamageReader, IPostLoadValidation, IBuildingRefRebindOwner
     {
+        public void PurgeAfterLoad() { }
+        public int RebindOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+
         private static readonly LogContext Log = new("CivilianDamageSystem");
         private static readonly Type[] s_ReboundComponentTypes = { typeof(CivilianWarDamage) };
 

@@ -53,6 +53,9 @@ namespace CivicSurvival.Domains.NeighborEnvy.Systems
     [ActIndependent]
     public partial class NeighborEnvySystem : ThrottledSystemBase, IDefaultSerializable, IResettable, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("NeighborEnvy");
 
         // ============================================================================

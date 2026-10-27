@@ -68,6 +68,9 @@ namespace CivicSurvival.Domains.AirDefense.Systems
     [HotPathSystem]
     public partial class AirDefenseOrchestrator : CivicSystemBase, IResettable, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         // ECB command counter — read by PerfReportSections for telemetry
         private static int s_EcbCommandCount;
         public static int EcbCommandCount => Volatile.Read(ref s_EcbCommandCount);

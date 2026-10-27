@@ -40,6 +40,9 @@ namespace CivicSurvival.Domains.Engineering.Systems
         Justification = "Transient UI command: durable RepairTransactionIntent is created by this ModificationEnd consumer, so pre-consume load loss is reissuable.")]
     public partial class PlantRepairIntakeSystem : CivicSystemBase, IPlantRepairScheduler, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("PlantRepairIntakeSystem");
 
         private EntityQuery m_RequestQuery;

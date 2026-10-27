@@ -33,6 +33,8 @@ namespace CivicSurvival.Core.Systems
     [ActIndependent]
     public partial class ModEntityCleanupSystem : CivicSystemBase, IPostLoadValidation
     {
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("ModEntityCleanupSystem");
         private const float THROTTLE_INTERVAL = 0.25f;
         private const int ROTATION_BATCH_COUNT = 4;

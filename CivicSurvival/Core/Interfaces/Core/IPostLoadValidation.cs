@@ -20,7 +20,7 @@ namespace CivicSurvival.Core.Interfaces.Core
         /// Lower values run first. Default is <see cref="HydrationPriority.DEFAULT"/> (no ordering requirement).
         /// Use <see cref="HydrationPriority"/> constants for systems with ordering dependencies.
         /// </summary>
-        int HydrationOrder => HydrationPriority.DEFAULT;
+        int HydrationOrder { get; }
 
         /// <summary>
         /// Validate and reconcile state after all systems have deserialized.
@@ -51,7 +51,7 @@ namespace CivicSurvival.Core.Interfaces.Core
         /// Same lookup-staleness rule as ValidateAfterLoad: call .Update(this) on
         /// any ComponentLookup/BufferLookup before use.
         /// </summary>
-        void PurgeAfterLoad() { }
+        void PurgeAfterLoad();
     }
 
     /// <summary>
