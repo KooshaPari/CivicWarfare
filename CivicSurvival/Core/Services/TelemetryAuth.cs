@@ -184,10 +184,13 @@ BackgroundTask.Run(() =>
 
             /// <summary>
             /// The player's current nickname as held by the server (source of truth for the
-            /// online nickname). Empty when the server reported none. Only meaningful together
-            /// with <see cref="Initialized"/> == true — when the player has never set one the
-            /// server returns a synthetic "Mayor_XXXX" fallback that must not be treated as a
-            /// real nickname.
+            /// online nickname). Empty when the server reported no nickname. Only meaningful
+            /// together with <see cref="Initialized"/> == true — a never-set player is reported
+            /// with Initialized=false and an empty Nickname. The client NEVER fabricates an
+            /// identity: any synthetic display fallback the server might emit is defensively
+            /// dropped here (see <see cref="IsSyntheticFallback"/>). Callers must treat an
+            /// Initialized=false result as "not signed in" / "nickname not yet chosen" and MUST
+            /// NOT render the Nickname field as if it were a real chosen identity.
             /// </summary>
             public readonly string Nickname;
 
@@ -201,8 +204,27 @@ BackgroundTask.Run(() =>
                 Success = success;
                 ReasonId = reasonId ?? string.Empty;
                 ChangesRemaining = changesRemaining;
-                Initialized = initialized;
-                Nickname = nickname ?? string.Empty;
+                // Defensive drop: if the server ever emits a synthetic display
+                // fallback (e.g. "Mayor_XXXX" from an older build) we never
+                // surface it as a real identity. The client treats this as
+                // "not signed in" and the UI MUST render "nickname not set".
+                Initialized = initialized && !string.IsNullOrEmpty(nickname) && !IsSyntheticFallback(nickname);
+                Nickname = (initialized && !IsSyntheticFallback(nickname)) ? nickname : string.Empty;
+            }
+
+            /// <summary>
+            /// True for synthetic display strings the server has historically
+            /// returned for never-set players. The current server contract
+            /// reports Initialized=false instead, but defense in depth: any
+            /// future server that slips back to a display fallback is caught
+            /// here and the value is dropped before reaching UI or persistence.
+            /// </summary>
+            internal static bool IsSyntheticFallback(string? value)
+            {
+                if (string.IsNullOrEmpty(value)) return false;
+                return value.StartsWith("Mayor_", StringComparison.Ordinal)
+                    || value.StartsWith("Mayor ", StringComparison.Ordinal)
+                    || value.Equals("Mayor", StringComparison.Ordinal);
             }
         }
 

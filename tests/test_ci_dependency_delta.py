@@ -23,6 +23,26 @@ def load_module():
     return module
 
 
+def init_git_repo(repo: Path) -> str:
+    """Initialise a git repository in *repo* and return the base commit."""
+    subprocess.run(["git", "init", "--quiet"], cwd=repo, check=True)
+    subprocess.run(
+        ["git", "config", "user.email", "tests@example.invalid"],
+        cwd=repo,
+        check=True,
+    )
+    subprocess.run(["git", "config", "user.name", "Civic tests"], cwd=repo, check=True)
+    subprocess.run(["git", "add", "."], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "--quiet", "-m", "base"], cwd=repo, check=True)
+    return subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+
+
 def load_workflow(path: Path) -> dict:
     ruby = shutil.which("ruby")
     assert ruby, "Ruby is required for dependency-free structural YAML validation"
@@ -55,7 +75,7 @@ def test_package_lock_change_runs_the_locked_node_audit(tmp_path):
         (
             "node",
             ui,
-            ("npm", "audit", "--package-lock-only", "--audit-level=low"),
+            ("npm", "audit", "--package-lock-only", "--audit-level=low", "--json"),
         )
     ]
 
@@ -73,7 +93,7 @@ def test_npm_shrinkwrap_change_runs_the_locked_node_audit_from_project(tmp_path)
         (
             "node",
             ui,
-            ("npm", "audit", "--package-lock-only", "--audit-level=low"),
+            ("npm", "audit", "--package-lock-only", "--audit-level=low", "--json"),
         )
     ]
 
@@ -257,6 +277,53 @@ def test_csproj_metadata_combined_with_version_is_exempt_from_dependency_scan(tm
     assert plan == []
 
 
+def test_csproj_single_line_package_change_is_not_hidden_by_a_metadata_change(tmp_path):
+    """A single-line csproj that changes both a metadata element and a package.
+
+    The whole document sits on one line, so the changed element can only be
+    found by comparing the elements themselves. A comparison that stops at
+    the first difference would report the metadata element alone and skip
+    the dependency scan, letting a package change through unchecked.
+    """
+    module = load_module()
+    diff = (
+        "--- a/CivicSurvival/CivicSurvival.csproj\n"
+        "+++ b/CivicSurvival/CivicSurvival.csproj\n"
+        "@@ -1 +1 @@\n"
+        "-<Project><PropertyGroup><Version>0.3.24</Version></PropertyGroup>"
+        '<ItemGroup><PackageReference Include="Foo" Version="1.0.0" /></ItemGroup></Project>\n'
+        "+<Project><PropertyGroup><Version>0.3.25</Version></PropertyGroup>"
+        '<ItemGroup><PackageReference Include="Foo" Version="2.0.0" /></ItemGroup></Project>\n'
+    )
+
+    with pytest.raises(module.DependencyDeltaError, match="packages.lock.json"):
+        module.build_scan_plan(
+            tmp_path,
+            ["CivicSurvival/CivicSurvival.csproj"],
+            diff_provider=lambda _r, _p: diff,
+        )
+
+
+def test_csproj_single_line_metadata_only_change_is_exempt(tmp_path):
+    """A single-line csproj that changes only a metadata element is exempt."""
+    module = load_module()
+    diff = (
+        "--- a/CivicSurvival/CivicSurvival.csproj\n"
+        "+++ b/CivicSurvival/CivicSurvival.csproj\n"
+        "@@ -1 +1 @@\n"
+        "-<Project><PropertyGroup><Version>0.3.24</Version></PropertyGroup></Project>\n"
+        "+<Project><PropertyGroup><Version>0.3.25</Version></PropertyGroup></Project>\n"
+    )
+
+    plan = module.build_scan_plan(
+        tmp_path,
+        ["CivicSurvival/CivicSurvival.csproj"],
+        diff_provider=lambda _r, _p: diff,
+    )
+
+    assert plan == []
+
+
 def test_csproj_package_reference_change_still_triggers_dependency_scan(tmp_path):
     module = load_module()
     diff = (
@@ -270,7 +337,6 @@ def test_csproj_package_reference_change_still_triggers_dependency_scan(tmp_path
         '+  <PackageReference Include="Foo" Version="2.0.0" />\n'
         "+  <Description>new</Description>\n"
     )
-
     with pytest.raises(module.DependencyDeltaError, match="packages.lock.json"):
         module.build_scan_plan(
             tmp_path,
@@ -365,6 +431,7 @@ def test_civicignore_silently_skips_matched_paths(tmp_path):
     (tmp_path / ".civicignore").write_text(
         "# ignored manifests\nCivicSurvival/CivicSurvival.csproj\nCivicSurvival/UI/package.json\n"
     )
+    base = init_git_repo(tmp_path)
 
     plan = module.build_scan_plan(
         tmp_path,
@@ -372,6 +439,7 @@ def test_civicignore_silently_skips_matched_paths(tmp_path):
             "CivicSurvival/CivicSurvival.csproj",
             "CivicSurvival/UI/package.json",
         ],
+        base_ref=base,
     )
 
     assert plan == []
@@ -384,6 +452,7 @@ def test_civicignore_does_not_mask_unmatched_paths(tmp_path):
     ui.mkdir(parents=True)
     (ui / "package.json").write_text('{"name":"civic-ui"}')
     (ui / "package-lock.json").write_text('{"lockfileVersion":3}')
+    base = init_git_repo(tmp_path)
 
     plan = module.build_scan_plan(
         tmp_path,
@@ -391,6 +460,7 @@ def test_civicignore_does_not_mask_unmatched_paths(tmp_path):
             "CivicSurvival/CivicSurvival.csproj",
             "CivicSurvival/UI/package-lock.json",
         ],
+        base_ref=base,
     )
 
     assert [(item.ecosystem, item.cwd) for item in plan] == [("node", ui)]
@@ -399,6 +469,7 @@ def test_civicignore_does_not_mask_unmatched_paths(tmp_path):
 def test_civicignore_supports_fnmatch_globs(tmp_path):
     module = load_module()
     (tmp_path / ".civicignore").write_text("**/*.csproj\n")
+    base = init_git_repo(tmp_path)
 
     plan = module.build_scan_plan(
         tmp_path,
@@ -410,6 +481,7 @@ def test_civicignore_supports_fnmatch_globs(tmp_path):
             '-  <PackageReference Include="X" />\n'
             '+  <PackageReference Include="Y" />\n'
         ),
+        base_ref=base,
     )
 
     assert plan == []
@@ -424,6 +496,7 @@ def test_civicignore_blank_and_comment_lines_are_ignored(tmp_path):
     ui.mkdir(parents=True)
     (ui / "package.json").write_text('{"name":"civic-ui"}')
     (ui / "package-lock.json").write_text('{"lockfileVersion":3}')
+    base = init_git_repo(tmp_path)
 
     plan = module.build_scan_plan(
         tmp_path,
@@ -431,6 +504,7 @@ def test_civicignore_blank_and_comment_lines_are_ignored(tmp_path):
             "CivicSurvival/CivicSurvival.csproj",
             "CivicSurvival/UI/package-lock.json",
         ],
+        base_ref=base,
     )
 
     assert [(item.ecosystem, item.cwd) for item in plan] == [("node", ui)]
@@ -444,10 +518,12 @@ def test_missing_civicignore_does_not_fail(tmp_path):
     ui.mkdir(parents=True)
     (ui / "package.json").write_text('{"name":"civic-ui"}')
     (ui / "package-lock.json").write_text('{"lockfileVersion":3}')
+    base = init_git_repo(tmp_path)
 
     plan = module.build_scan_plan(
         tmp_path,
         ["CivicSurvival/UI/package-lock.json"],
+        base_ref=base,
     )
 
     assert len(plan) == 1
@@ -457,14 +533,15 @@ def test_missing_civicignore_does_not_fail(tmp_path):
 def test_civicignore_is_loaded_only_once_per_call(tmp_path):
     module = load_module()
     (tmp_path / ".civicignore").write_text("CivicSurvival/CivicSurvival.csproj\n")
+    base = init_git_repo(tmp_path)
 
     seen_loads: list[int] = []
 
     original = module._load_civicignore
 
-    def counting(repo: Path) -> list[str]:
+    def counting(repo: Path, base_ref: str | None = None) -> list[str]:
         seen_loads.append(1)
-        return original(repo)
+        return original(repo, base_ref)
 
     module._load_civicignore = counting  # type: ignore[assignment]
     try:
@@ -475,6 +552,7 @@ def test_civicignore_is_loaded_only_once_per_call(tmp_path):
                 "CivicSurvival/CivicSurvival.csproj",
                 "CivicSurvival/CivicSurvival.csproj",
             ],
+            base_ref=base,
         )
     finally:
         module._load_civicignore = original  # type: ignore[assignment]
@@ -489,13 +567,13 @@ def test_scanner_failure_propagates_to_the_required_gate(tmp_path):
     command = module.ScanCommand(
         ecosystem="node",
         cwd=ui,
-        command=("npm", "audit", "--package-lock-only", "--audit-level=low"),
+        command=("npm", "audit", "--package-lock-only", "--audit-level=low", "--json"),
     )
 
     def failing_runner(*_args, **_kwargs):
-        return type("Result", (), {"returncode": 1})()
+        return type("Result", (), {"returncode": 1, "stdout": "not-json"})()
 
-    with pytest.raises(module.DependencyDeltaError, match="node scanner failed"):
+    with pytest.raises(module.DependencyDeltaError, match="invalid npm audit JSON"):
         module.run_scan_plan([command], runner=failing_runner)
 
 
@@ -544,6 +622,45 @@ def test_dotnet_scan_accepts_machine_readable_zero_vulnerability_result(tmp_path
         [dotnet_scan_command(module, tmp_path)],
         runner=lambda *_args, **_kwargs: dotnet_result(payload),
     )
+
+
+def test_dotnet_scan_accepts_the_real_report_that_omits_frameworks(tmp_path):
+    """A real clean report names the project and omits the frameworks key.
+
+    ``dotnet list <project> package --vulnerable --include-transitive
+    --format json --output-version 1`` emits a project entry with only a
+    path when it found nothing to describe. Rejecting that shape would
+    fail the gate on every clean .NET project.
+    """
+    module = load_module()
+    payload = {
+        "version": 1,
+        "parameters": "--vulnerable --include-transitive",
+        "sources": ["https://api.nuget.org/v3/index.json"],
+        "projects": [{"path": "CivicSurvival.Contracts/CivicSurvival.Contracts.csproj"}],
+    }
+
+    module.run_scan_plan(
+        [dotnet_scan_command(module, tmp_path)],
+        runner=lambda *_args, **_kwargs: dotnet_result(payload),
+    )
+
+
+def test_dotnet_scan_fails_closed_when_a_project_reports_no_frameworks(tmp_path):
+    """A project with an empty frameworks list means nothing was scanned."""
+    module = load_module()
+    payload = {
+        "version": 1,
+        "projects": [
+            {"path": "CivicSurvival.Contracts/CivicSurvival.Contracts.csproj", "frameworks": []}
+        ],
+    }
+
+    with pytest.raises(module.DependencyDeltaError, match="no frameworks"):
+        module.run_scan_plan(
+            [dotnet_scan_command(module, tmp_path)],
+            runner=lambda *_args, **_kwargs: dotnet_result(payload),
+        )
 
 
 @pytest.mark.parametrize("package_kind", ["topLevelPackages", "transitivePackages"])
@@ -824,9 +941,447 @@ def test_ci_aggregate_gates_reject_failed_or_skipped_required_results():
         in python_job
     )
     assert "python3 -m pytest -q tests/test_ci_dependency_delta.py" in python_job
+    # The gate is split across sibling modules. Every one of them must be
+    # linted and format-checked, otherwise a module can drift out of
+    # compliance with no check noticing.
+    for module in (
+        "scripts/dependency_delta.py",
+        "scripts/dependency_trees.py",
+        "scripts/audit_reports.py",
+        "scripts/csproj_diff.py",
+        "scripts/errors.py",
+        "scripts/scan_types.py",
+    ):
+        assert module in python_job, f"{module} is not covered by the CI lint job"
     assert "|| echo" not in python_job
     assert 'if [ "$name" = "security" ]; then' in workflow
     assert 'if [ "$event_name" = "pull_request" ] && [ "$name" = "dep-review" ]; then' in workflow
     assert 'if [ "$required" -eq 1 ] && [ "$result" != "success" ]; then' in workflow
     assert 'lint_result="${{ needs.lint.result }}"' in workflow
     assert 'if [ "$lint_result" != "success" ]; then' in workflow
+
+
+# --- advisory-delta semantics for node scans -------------------------------
+#
+# `npm audit` exits 1 whenever ANY advisory exists in the dependency graph.
+# The Dependency Delta gate must only blame a PR for advisories it INTRODUCED.
+
+
+def _node_audit_payload(advisories: dict) -> str:
+    """A realistic `npm audit --json` report.
+
+    Real reports always carry BOTH "vulnerabilities" and
+    "metadata.vulnerabilities"; the reshaped parser requires both so a
+    truncated or error payload can never look like a clean bill of health.
+    """
+    total = len(advisories)
+    return json.dumps(
+        {
+            "auditReportVersion": 2,
+            "vulnerabilities": advisories,
+            "metadata": {
+                "vulnerabilities": {
+                    "info": 0,
+                    "low": total,
+                    "moderate": 0,
+                    "high": 0,
+                    "critical": 0,
+                    "total": total,
+                }
+            },
+        }
+    )
+
+
+def _advisory(url: str, source: int) -> dict:
+    return {
+        "severity": "high",
+        "isDirect": False,
+        "via": [{"source": source, "url": url}],
+    }
+
+
+def test_node_advisory_ids_are_extracted_from_ghsa_urls(tmp_path):
+    module = load_module()
+    payload = _node_audit_payload(
+        {
+            "undici": _advisory("https://github.com/advisories/GHSA-aaaa-bbbb-cccc", 1),
+            "vite": _advisory("https://github.com/advisories/GHSA-dddd-eeee-ffff", 2),
+        }
+    )
+
+    ids = module.node_advisory_ids(payload)
+
+    assert ids == {
+        "undici@https://github.com/advisories/GHSA-aaaa-bbbb-cccc",
+        "vite@https://github.com/advisories/GHSA-dddd-eeee-ffff",
+    }
+
+
+def test_node_advisory_ids_fall_back_to_package_and_source(tmp_path):
+    module = load_module()
+    payload = _node_audit_payload({"zod": {"via": [{"source": 99}]}})
+
+    assert module.node_advisory_ids(payload) == {"zod@99"}
+
+
+def test_node_advisory_ids_fail_closed_on_malformed_json(tmp_path):
+    module = load_module()
+    with pytest.raises(module.DependencyDeltaError, match="invalid npm audit JSON"):
+        module.node_advisory_ids("not-json")
+
+
+def test_node_advisory_ids_fail_closed_on_non_object_vulnerabilities(tmp_path):
+    module = load_module()
+    with pytest.raises(module.DependencyDeltaError, match="invalid npm audit JSON"):
+        module.node_advisory_ids(json.dumps({"vulnerabilities": "bad"}))
+
+
+def _node_plan_for(module, tmp_path, base_lockfile: bool = True):
+    """Build a node ScanCommand over a REAL temp git repo.
+
+    The base side of the delta is materialised with `git show <ref>:<path>`,
+    so the tests need an actual repository with a committed lockfile.
+    """
+    repo = tmp_path / "repo"
+    ui = repo / "CivicSurvival" / "UI"
+    ui.mkdir(parents=True)
+    (ui / "package.json").write_text('{"name":"civic-ui"}')
+    (ui / "package-lock.json").write_text('{"lockfileVersion":3}')
+
+    def git(*args):
+        subprocess.run(("git", *args), cwd=repo, check=True, capture_output=True, text=True)
+
+    git("init", "-q")
+    git("config", "user.email", "test@example.invalid")
+    git("config", "user.name", "test")
+    git("add", "-A")
+    if not base_lockfile:
+        # Commit WITHOUT the lockfile so the BASE tree genuinely has none.
+        git("rm", "-q", "--cached", "CivicSurvival/UI/package-lock.json")
+    git("commit", "-q", "-m", "base")
+    return module.ScanCommand(
+        ecosystem="node",
+        cwd=ui,
+        command=("npm", "audit", "--package-lock-only", "--audit-level=low", "--json"),
+        base_cwd=ui,
+    )
+
+
+def test_node_scan_passes_when_no_new_advisory_is_introduced(tmp_path):
+    """An unchanged pre-existing advisory is not this PR's fault."""
+    module = load_module()
+    command = _node_plan_for(module, tmp_path)
+    payload = _node_audit_payload(
+        {"undici": _advisory("https://github.com/advisories/GHSA-aaaa-bbbb-cccc", 1)}
+    )
+
+    calls = {"n": 0}
+
+    def runner(*_args, **_kwargs):
+        # call 1 is HEAD, call 2 is BASE
+        calls["n"] += 1
+        return type("Result", (), {"returncode": 1, "stdout": payload})()
+
+    module.run_scan_plan([command], runner=runner, base_ref="HEAD")
+
+
+def test_node_scan_fails_when_a_new_advisory_is_introduced(tmp_path):
+    module = load_module()
+    command = _node_plan_for(module, tmp_path)
+    base = _node_audit_payload(
+        {"undici": _advisory("https://github.com/advisories/GHSA-aaaa-bbbb-cccc", 1)}
+    )
+    head = _node_audit_payload(
+        {
+            "undici": _advisory("https://github.com/advisories/GHSA-aaaa-bbbb-cccc", 1),
+            "vite": _advisory("https://github.com/advisories/GHSA-dddd-eeee-ffff", 2),
+        }
+    )
+    calls = {"n": 0}
+
+    def runner(*_args, **_kwargs):
+        # call 1 is HEAD, call 2 is BASE
+        calls["n"] += 1
+        return type("Result", (), {"returncode": 1, "stdout": head if calls["n"] == 1 else base})()
+
+    with pytest.raises(module.DependencyDeltaError, match="introduced new advisories"):
+        module.run_scan_plan([command], runner=runner, base_ref="HEAD")
+
+
+def test_node_scan_passes_when_an_advisory_is_removed(tmp_path):
+    """A dependency upgrade that FIXES an advisory must not fail the gate."""
+    module = load_module()
+    command = _node_plan_for(module, tmp_path)
+    base = _node_audit_payload(
+        {"undici": _advisory("https://github.com/advisories/GHSA-aaaa-bbbb-cccc", 1)}
+    )
+    head = _node_audit_payload({})
+    calls = {"n": 0}
+
+    def runner(*_args, **_kwargs):
+        # call 1 is HEAD, call 2 is BASE
+        calls["n"] += 1
+        return type("Result", (), {"returncode": 1, "stdout": head if calls["n"] == 1 else base})()
+
+    module.run_scan_plan([command], runner=runner, base_ref="HEAD")
+
+
+def test_node_scan_treats_a_reintroduced_advisory_as_new(tmp_path):
+    """An advisory present in base but absent in head is fine; present in BOTH
+    is not new. This guards against comparing package names instead of ids."""
+    module = load_module()
+    command = _node_plan_for(module, tmp_path)
+    same = _node_audit_payload(
+        {"undici": _advisory("https://github.com/advisories/GHSA-aaaa-bbbb-cccc", 1)}
+    )
+    calls = {"n": 0}
+
+    def runner(*_args, **_kwargs):
+        calls["n"] += 1
+        return type("Result", (), {"returncode": 1, "stdout": same})()
+
+    module.run_scan_plan([command], runner=runner, base_ref="HEAD")
+
+
+def test_node_scan_fails_closed_when_the_base_tree_has_no_lockfile(tmp_path):
+    """Without a base lockfile the delta is unknowable, so refuse to guess."""
+    module = load_module()
+    command = _node_plan_for(module, tmp_path, base_lockfile=False)
+    # The lockfile exists in the working tree but was never committed, so the
+    # BASE commit genuinely has no lockfile to audit.
+    payload = _node_audit_payload({})
+
+    calls = {"n": 0}
+
+    def runner(*_args, **_kwargs):
+        calls["n"] += 1
+        return type("Result", (), {"returncode": 0, "stdout": payload})()
+
+    with pytest.raises(module.DependencyDeltaError, match="cannot compare against the base tree"):
+        module.run_scan_plan([command], runner=runner, base_ref="HEAD")
+
+
+# --- regression tests for the independent review findings -------------------
+#
+# The review returned BLOCK/RESHAPE on the first prototype. Three defects
+# were confirmed; each gets a test here so it cannot regress.
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        pytest.param({"error": {"code": "ENOTFOUND"}}, id="npm-registry-error"),
+        pytest.param({"error": {"code": "EAI_AGAIN"}}, id="npm-dns-error"),
+        pytest.param({}, id="empty-object"),
+        pytest.param({"auditReportVersion": 2}, id="no-vulnerabilities-key"),
+        pytest.param({"vulnerabilities": {}, "metadata": {}}, id="no-metadata-vulnerabilities"),
+    ],
+)
+def test_node_advisory_ids_fail_closed_on_non_reports(tmp_path, payload):
+    """A payload that is not an audit report must RAISE, never read as empty.
+
+    An empty id set means "no new advisories" -> the gate would PASS. npm
+    reports transport failures as a top-level "error" object and still exits
+    0, so treating that as a clean bill of health silently disables the
+    scanner whenever the registry is unreachable.
+    """
+    module = load_module()
+    with pytest.raises(module.DependencyDeltaError, match="invalid npm audit JSON"):
+        module.node_advisory_ids(json.dumps(payload))
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        pytest.param({"vulnerabilities": {"a": {"via": []}}}, id="empty-via"),
+        pytest.param({"vulnerabilities": {"a": {"via": [{}]}}}, id="via-without-id"),
+        pytest.param({"vulnerabilities": {"a": {}}}, id="missing-via-key"),
+    ],
+)
+def test_node_advisory_ids_fail_closed_on_unidentified_entries(tmp_path, payload):
+    """An advisory with no usable identity must raise, not be skipped."""
+    module = load_module()
+    with pytest.raises(module.DependencyDeltaError, match="invalid npm audit JSON"):
+        module.node_advisory_ids(json.dumps(payload))
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        pytest.param(
+            {
+                "vulnerabilities": {},
+                "metadata": {"vulnerabilities": {"total": 1}},
+            },
+            id="total-exceeds-listed-packages",
+        ),
+        pytest.param(
+            {
+                "vulnerabilities": {"a": {"via": []}},
+                "metadata": {"vulnerabilities": {"total": 1}},
+            },
+            id="empty-via-with-nonzero-total",
+        ),
+        pytest.param(
+            {
+                "vulnerabilities": {},
+                "metadata": {"vulnerabilities": None},
+            },
+            id="metadata-vulnerabilities-null",
+        ),
+        pytest.param(
+            {
+                "vulnerabilities": {},
+                "metadata": {"vulnerabilities": {}},
+            },
+            id="missing-total",
+        ),
+    ],
+)
+def test_node_advisory_ids_fail_closed_when_the_report_is_inconsistent(tmp_path, payload):
+    """A report whose own count contradicts its contents must raise.
+
+    npm records how many vulnerable packages it found. A report that
+    claims a vulnerability it does not describe is inconsistent, and
+    reading it as clean would let that package through unchecked.
+    """
+    module = load_module()
+    with pytest.raises(module.DependencyDeltaError, match="invalid npm audit JSON"):
+        module.node_advisory_ids(json.dumps(payload))
+
+
+def test_node_advisory_ids_accepts_a_report_whose_count_matches(tmp_path):
+    """A report whose count matches its contents is accepted."""
+    module = load_module()
+    payload = {
+        "auditReportVersion": 2,
+        "metadata": {
+            "vulnerabilities": {
+                "info": 0,
+                "low": 0,
+                "moderate": 0,
+                "high": 1,
+                "critical": 0,
+                "total": 1,
+            }
+        },
+        "vulnerabilities": {"a": {"via": [{"url": "https://example.invalid/GHSA-x"}]}},
+    }
+
+    assert module.node_advisory_ids(json.dumps(payload)) == {"a@https://example.invalid/GHSA-x"}
+
+
+def test_advisory_identity_is_package_scoped(tmp_path):
+    """Identity must include the package, not just the GHSA id.
+
+    Keying on the global advisory id alone lets a NEW package inherit an
+    advisory the base already had, and the new exposure is masked.
+    """
+    module = load_module()
+    payload = _node_audit_payload(
+        {
+            "pkg-a": _advisory("https://github.com/advisories/GHSA-same", 1),
+            "pkg-b": _advisory("https://github.com/advisories/GHSA-same", 1),
+        }
+    )
+
+    ids = module.node_advisory_ids(payload)
+
+    assert ids == {
+        "pkg-a@https://github.com/advisories/GHSA-same",
+        "pkg-b@https://github.com/advisories/GHSA-same",
+    }
+
+
+def test_node_scan_fails_when_a_new_package_inherits_an_existing_advisory(tmp_path):
+    """The masking case: base pkg-a has GHSA-X, head adds pkg-b with GHSA-X.
+
+    The advisory id is unchanged, so a global-id comparison would find
+    nothing new. With package-scoped identity the new package IS a new
+    exposure and must fail.
+    """
+    module = load_module()
+    command = _node_plan_for(module, tmp_path)
+    base = _node_audit_payload({"pkg-a": _advisory("https://github.com/advisories/GHSA-same", 1)})
+    head = _node_audit_payload(
+        {
+            "pkg-a": _advisory("https://github.com/advisories/GHSA-same", 1),
+            "pkg-b": _advisory("https://github.com/advisories/GHSA-same", 1),
+        }
+    )
+    calls = {"n": 0}
+
+    def runner(*_args, **_kwargs):
+        # call 1 is HEAD, call 2 is BASE
+        calls["n"] += 1
+        return type("Result", (), {"returncode": 1, "stdout": head if calls["n"] == 1 else base})()
+
+    with pytest.raises(module.DependencyDeltaError, match="introduced new advisories"):
+        module.run_scan_plan([command], runner=runner, base_ref="HEAD")
+
+
+def test_node_scan_fails_closed_when_the_audit_reports_an_error(tmp_path):
+    """npm's error payload must fail the gate, not pass it."""
+    module = load_module()
+    command = _node_plan_for(module, tmp_path)
+    error = json.dumps({"error": {"code": "ENOTFOUND"}})
+
+    def runner(*_args, **_kwargs):
+        return type("Result", (), {"returncode": 0, "stdout": error})()
+
+    with pytest.raises(module.DependencyDeltaError, match="invalid npm audit JSON"):
+        module.run_scan_plan([command], runner=runner, base_ref="HEAD")
+
+
+def test_node_scan_audits_the_head_commit_not_the_live_checkout(tmp_path):
+    """The head side of the delta must come from --head, not the working tree.
+
+    If the checkout differs from the commit the gate was asked about (a
+    dirty tree, a branch moved, a stale worktree), auditing the live
+    checkout computes the delta against the wrong tree.
+    """
+    module = load_module()
+    repo = tmp_path / "repo"
+    ui = repo / "CivicSurvival" / "UI"
+    ui.mkdir(parents=True)
+    (ui / "package.json").write_text('{"name":"civic-ui"}')
+    (ui / "package-lock.json").write_text('{"lockfileVersion":3}')
+
+    def git(*args):
+        subprocess.run(("git", *args), cwd=repo, check=True, capture_output=True, text=True)
+
+    git("init", "-q")
+    git("config", "user.email", "test@example.invalid")
+    git("config", "user.name", "test")
+    git("add", "-A")
+    git("commit", "-q", "-m", "head")
+    head = subprocess.run(
+        ("git", "rev-parse", "HEAD"),
+        cwd=repo,
+        check=False,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+
+    # Make the WORKING TREE differ from the head commit: a vulnerable
+    # lockfile that is not in the commit.
+    (ui / "package-lock.json").write_text('{"lockfileVersion":3,"dirty":true}')
+
+    command = module.ScanCommand(
+        ecosystem="node",
+        cwd=ui,
+        command=("npm", "audit", "--package-lock-only", "--audit-level=low", "--json"),
+        base_cwd=ui,
+    )
+    calls = {"n": 0}
+    payload = _node_audit_payload({})
+
+    def runner(*_args, **_kwargs):
+        # call 1 is HEAD, call 2 is BASE
+        calls["n"] += 1
+        return type("Result", (), {"returncode": 0, "stdout": payload})()
+
+    # Both sides come from git, so the dirty working tree is ignored and the
+    # delta is computed against the head commit.
+    module.run_scan_plan([command], runner=runner, base_ref=head, head_ref=head)

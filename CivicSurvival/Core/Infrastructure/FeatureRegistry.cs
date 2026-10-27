@@ -212,9 +212,13 @@ namespace CivicSurvival.Core.Infrastructure
                     continue;
                 }
 
-                // Future wave below sentinel -> preview. Systems are
-                // intentionally NOT registered; the UI renders a dimmed mock-up
-                // from DTO defaults.
+                // Future wave below sentinel -> preview. Systems are intentionally
+                // NOT registered. The UI MUST query IsUnavailable(featureId, out
+                // reason) and render an honest "locked" affordance (reason=WaveLocked);
+                // it MUST NOT fabricate preview data, dimmed mock-ups, or fake
+                // placeholder rows from DTO defaults. The existing feature-flag
+                // mechanism (m_PreviewFeatures + WaveLocked) is the only legal way
+                // for callers to detect this state.
                 if (wave > manifest.CurrentWave)
                 {
                     lock (s_Lock) m_PreviewFeatures.Add(feature.Name);
