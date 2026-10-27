@@ -74,14 +74,14 @@ The client source here is published for **transparency and auditability**, not a
 one-click build. Anyone can read the client code and confirm the mod does exactly what
 it claims — nothing more.
 
-> **This is not a buildable distribution.** A full build requires a configured
+> **This is not a buildable distribution from an unconfigured clone, nor a one-click build.** A full build requires a configured
 > Cities: Skylines II modding environment (the game itself, the CS2 Modding Toolkit,
-> a Unity mod-project for Burst, prebuild code generators, and a UI toolchain). That
-> is normal for a CS2 mod, not a shortcoming. In addition, this public snapshot
-> **does not include the private source generators** the project depends on at
-> compile time, so the snapshot will not compile end-to-end for third parties **by
-> design**. See [`BUILDING.md`](BUILDING.md) for the full picture. Open code gives
-> trust without requiring everyone to build it.
+> a Unity mod-project for Burst, prebuild code generators, and a UI toolchain). The
+> Roslyn source generators are included in the public snapshot under
+> `CivicSurvival.Analyzers`; their presence does not provide the licensed game/toolkit
+> assemblies or prove an installed-game launch. See [`BUILDING.md`](BUILDING.md) for
+> the exact build and WP01 evidence boundaries. Open code gives trust without
+> requiring everyone to build it.
 
 ### This is the client; the server is closed
 

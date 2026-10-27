@@ -299,7 +299,13 @@ namespace CivicSurvival.Services.Arena
             if (!m_Enabled)
             {
                 Log.Info(" Disabled (online off)");
-                // Still provide mock data for UI
+                // Initialize the rank-tier ladder STRUCTURE from local balance
+                // config (icon + threshold pairs). These are static ladder
+                // metadata, NOT leaderboard rows. Live leaderboard rows remain
+                // JsonBuilder.EmptyArray until the first successful server
+                // fetch — the UI surfaces "live data unavailable" rather than
+                // placeholder rows. No fabricated data path exists in this
+                // method; it never returns mock leaderboard entries.
                 BuildRankTiersJson();
                 BuildShadowRankTiersJson();
                 BuildProsperityRankTiersJson();

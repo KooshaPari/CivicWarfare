@@ -12,6 +12,30 @@ namespace CivicSurvival.Analyzers.Generators;
 [Generator]
 public class SerializeResetPersistGenerator : IIncrementalGenerator
 {
+    /// <summary>
+    /// Bump this constant whenever the on-disk save format produced by the
+    /// generated serializer changes in an incompatible way (renamed fields,
+    /// removed properties, type changes, semantic re-interpretation).
+    ///
+    /// Every generated <c>*Serializer.g.cs</c> carries a matching
+    /// <c>SaveFormatVersion</c> constant baked in at generation time. The
+    /// generated Deserialize method reads the stamp from incoming data first
+    /// and throws <see cref="InvalidOperationException"/> with a clear message
+    /// when the version does not match — saves fail loud instead of silently
+    /// corrupting into wrong-but-loadable state. Minor additive changes
+    /// (new optional properties) do NOT require a bump.
+    /// </summary>
+    public const int CurrentSaveFormatVersion = 1;
+
+    /// <summary>
+    /// Dictionary key the generated Serialize/Deserialize pair use to carry
+    /// the save-format version stamp. The leading double underscore + civic
+    /// prefix keeps it out of the user-visible property namespace so it
+    /// never collides with a real field. Do not rename without also writing
+    /// a migration for in-flight saves.
+    /// </summary>
+    public const string SaveFormatVersionKey = "__civic_save_format_version";
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         var classDeclarations = context.SyntaxProvider
@@ -102,11 +126,25 @@ public class SerializeResetPersistGenerator : IIncrementalGenerator
         sb.AppendLine($"    public static class {className}{typeParams}{typeConstraints}");
         sb.AppendLine("    {");
 
-        // Serialize method
-        sb.AppendLine($"        /// <summary>Serializes the instance to a dictionary.</summary>");
+        // Save-format version stamp baked at generation time. Stamped into
+        // every Serialize output and verified at the top of every Deserialize
+        // so saves fail loud on version mismatch instead of silently parsing
+        // wrong-but-loadable data. See SerializeResetPersistGenerator.CurrentSaveFormatVersion.
+        sb.AppendLine($"        /// <summary>");
+        sb.AppendLine($"        /// Save-format version this serializer emits. Bumped in lockstep with");
+        sb.AppendLine($"        /// <see cref=\"CivicSurvival.Analyzers.Generators.SerializeResetPersistGenerator.CurrentSaveFormatVersion\"/>");
+        sb.AppendLine($"        /// when the on-disk shape changes incompatibly. Deserialize throws on mismatch.");
+        sb.AppendLine($"        /// </summary>");
+        sb.AppendLine($"        public const int SaveFormatVersion = {CurrentSaveFormatVersion};");
+        sb.AppendLine();
+
+        // Serialize method — stamp the version first so any consumer that
+        // peeks at the data sees the format marker before the payload.
+        sb.AppendLine($"        /// <summary>Serializes the instance to a dictionary, stamped with SaveFormatVersion.</summary>");
         sb.AppendLine($"        public static Dictionary<string, object> Serialize{info.Name}{typeParams}({info.Name}{typeParams} instance)");
         sb.AppendLine("        {");
         sb.AppendLine("            var result = new Dictionary<string, object>();");
+        sb.AppendLine($"            result[\"{SaveFormatVersionKey}\"] = SaveFormatVersion;");
         foreach (var prop in info.Properties)
         {
             sb.AppendLine($"            result[\"{prop.Name}\"] = instance.{prop.Name};");
@@ -114,10 +152,32 @@ public class SerializeResetPersistGenerator : IIncrementalGenerator
         sb.AppendLine("            return result;");
         sb.AppendLine("        }");
 
-        // Deserialize method
-        sb.AppendLine($"        /// <summary>Deserializes from a dictionary.</summary>");
+        // Deserialize method — verify the stamp first. Missing stamp or
+        // version mismatch throws InvalidOperationException so the load
+        // fails loud instead of producing a partially-populated instance
+        // that downstream code treats as a valid save.
+        sb.AppendLine($"        /// <summary>Deserializes from a dictionary. Throws on SaveFormatVersion mismatch.</summary>");
         sb.AppendLine($"        public static {info.Name}{typeParams} Deserialize{info.Name}{typeParams}(Dictionary<string, object> data)");
         sb.AppendLine("        {");
+        sb.AppendLine("            if (data == null) throw new ArgumentNullException(nameof(data));");
+        sb.AppendLine($"            if (!data.TryGetValue(\"{SaveFormatVersionKey}\", out var versionValue) || versionValue == null)");
+        sb.AppendLine("                throw new InvalidOperationException(");
+        sb.AppendLine($"                    $\"Save data for {info.Name} is missing the {SaveFormatVersionKey} stamp — corrupted or written by an incompatible serializer. Expected version {{SaveFormatVersion}}.\");");
+        sb.AppendLine("            if (versionValue is int versionInt)");
+        sb.AppendLine("            {");
+        sb.AppendLine("                if (versionInt != SaveFormatVersion)");
+        sb.AppendLine($"                    throw new InvalidOperationException($\"Save data for {info.Name} is version {{versionInt}} but this serializer expects {{SaveFormatVersion}}. The save cannot be loaded by this build.\");");
+        sb.AppendLine("            }");
+        sb.AppendLine("            else if (versionValue is long versionLong)");
+        sb.AppendLine("            {");
+        sb.AppendLine("                if ((int)versionLong != SaveFormatVersion)");
+        sb.AppendLine($"                    throw new InvalidOperationException($\"Save data for {info.Name} is version {{versionLong}} but this serializer expects {{SaveFormatVersion}}. The save cannot be loaded by this build.\");");
+        sb.AppendLine("            }");
+        sb.AppendLine("            else");
+        sb.AppendLine("            {");
+        sb.AppendLine($"                throw new InvalidOperationException($\"Save data for {info.Name} carries an unreadable {SaveFormatVersionKey} stamp (type {{versionValue.GetType().Name}}). Expected version {{SaveFormatVersion}}.\");");
+        sb.AppendLine("            }");
+        sb.AppendLine();
         sb.AppendLine($"            var instance = new {info.Name}{typeParams}();");
         foreach (var prop in info.Properties)
         {

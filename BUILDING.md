@@ -1,13 +1,15 @@
 # Building
 
-**Read this first: this repository is for reading the code, not for building it in
-one click.**
+**Read this first: this repository is source-complete for the Roslyn generators,
+but it is not a one-click Cities: Skylines II build environment.**
 
 The source is published for transparency and auditability. A full build of a Cities:
-Skylines II mod requires a configured CS2 modding environment, and on top of that
-**this public snapshot deliberately omits the project's private source generators**,
-so the snapshot does **not** compile end-to-end for third parties. That is by design,
-not a bug — see "Why the public snapshot does not fully compile" below.
+Skylines II mod requires a configured CS2 modding environment. The
+`CivicSurvival.Analyzers` source generators are published in this snapshot and are
+included as an analyzer-only project reference by `CivicSurvival.csproj`; they are
+not the missing dependency described by older WP01 records. A third-party build
+still requires the licensed game assemblies, CS2 Modding Toolkit, and the other
+toolchain components listed below.
 
 If you only want to verify what the mod does, just read the code. If you want to
 understand the build contract anyway, the requirements below are accurate to the
@@ -173,19 +175,26 @@ The mod has a single Burst switch, `EnableCivicBurst` (in `CivicSurvival.csproj`
   them is an extra step only relevant if you specifically want the Burst-compiled
   performance path.
 
-## Why the public snapshot does not fully compile
+## Public source-generator boundary
 
-The project relies on a private set of **Roslyn source generators** (part of the
-`CivicSurvival.Analyzers` project) that are **not published** in this snapshot.
-Several of these generators emit code the client needs at compile time, so without
-them the client will not compile completely.
+The public snapshot contains `CivicSurvival.Analyzers`, targeting `netstandard2.0`,
+with the generators used by the client. Build or inspect that project independently
+with:
 
-The public snapshot therefore has the `ProjectReference` to `CivicSurvival.Analyzers`
-(and its analyzer-only `AdditionalFiles`) removed from the public `.csproj` as a
-cosmetic measure — so the project does not reference a project that isn't here. The
-reference to `CivicSurvival.Contracts` is kept (those wire contracts are published and
-the client needs them).
+```text
+dotnet build CivicSurvival.Analyzers/CivicSurvival.Analyzers.csproj --nologo
+```
 
-This is intentional: the goal of this repository is **readable, auditable code**, not
-a reproducible third-party build. The author's own store releases are built from the
-private repository, which has the generators.
+The client references the project with `ReferenceOutputAssembly="false"` and
+`OutputItemType="Analyzer"`, so its generated source is available during compilation.
+That project build does not provide the game/toolkit assemblies or prove that a mod
+loads in a licensed game.
+
+## End-to-end build boundary
+
+Even with the generators present, a complete client build remains environment-bound:
+it requires Cities: Skylines II managed assemblies, the CS2 Modding Toolkit, and (for
+the relevant configurations) the Unity/Burst and UI toolchains above. A successful
+generator or contracts build is therefore source/build evidence, not licensed-host
+adapter or launch-smoke evidence. WP01 remains pending until the external evidence
+runbook is completed on the authorized host.
