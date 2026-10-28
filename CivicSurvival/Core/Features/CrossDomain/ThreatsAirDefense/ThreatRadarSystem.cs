@@ -33,6 +33,9 @@ namespace CivicSurvival.Core.Features.CrossDomain.ThreatsAirDefense
     [ServiceOnlySystem("On-demand radar reader; consumers call RadarView/IThreatRadarReader directly, no per-frame work.")]
     public partial class ThreatRadarSystem : CivicSystemBase, IThreatRadarReader, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private const int DEFAULT_MAP_EXTENT = 7168;
 
         private static readonly LogContext Log = new("ThreatRadarSystem");

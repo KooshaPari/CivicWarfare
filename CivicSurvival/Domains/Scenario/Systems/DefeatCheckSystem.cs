@@ -29,6 +29,9 @@ namespace CivicSurvival.Domains.Scenario.Systems
     [ActIndependent]
     public partial class DefeatCheckSystem : CivicSystemBase, IDefaultSerializable, IResettable, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("DefeatCheckSystem");
 
         private const float THROTTLE_SECONDS = 1.0f;

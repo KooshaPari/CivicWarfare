@@ -47,6 +47,9 @@ namespace CivicSurvival.Domains.Tutorial.Systems
     /// </summary>
     public partial class CrisisTutorialSystem : CivicUISystemBase, IDefaultSerializable, IResettable, IBootDefaultsReset, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("CrisisTutorial");
 
         // ===== Modal State (event-driven, real UI) =====

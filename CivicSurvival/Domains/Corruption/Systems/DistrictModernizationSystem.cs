@@ -57,6 +57,9 @@ namespace CivicSurvival.Domains.Corruption.Systems
     public partial class DistrictModernizationSystem : CivicSystemBase, IDistrictModernizationService, IPostLoadValidation, IModernizationProcurementHost
 #pragma warning restore CIVIC173
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private const int INVESTIGATION_CHECK_INTERVAL_DAYS = 30;
         private const int RANDOM_SEED_OFFSET = 12345;
         private const uint SEED_DAY_MULTIPLIER = 31;

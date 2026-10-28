@@ -43,6 +43,8 @@ namespace CivicSurvival.Domains.Diplomacy.Systems
         IPostLoadValidation, ICivicSingletonOwner<CrisisStateSingleton>, IBootDefaultsReset
 #pragma warning restore CIVIC223
     {
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("CrisisMonitorSystem");
         // Cached metrics (updated daily)
         private float m_CrisisLevel;

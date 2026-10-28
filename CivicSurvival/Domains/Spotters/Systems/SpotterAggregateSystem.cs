@@ -53,6 +53,9 @@ namespace CivicSurvival.Domains.Spotters.Systems
     public partial class SpotterAggregateSystem : ThrottledSystemBase, IResettable, IPostLoadValidation
 #pragma warning restore CIVIC228
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("SpotterAggregateSystem");
 
         // Queries

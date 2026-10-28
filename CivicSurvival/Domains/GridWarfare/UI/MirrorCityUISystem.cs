@@ -28,6 +28,9 @@ namespace CivicSurvival.Domains.GridWarfare.UI
     [ActIndependent]
     public partial class MirrorCityUISystem : CivicUIPanelSystem, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         // Signature of the last-published quantized snapshot. The string is rebuilt/re-pushed only when
         // this changes, so a repair tick that does not move any published (quantized) number is free.
         private long m_LastSignature;

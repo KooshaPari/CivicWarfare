@@ -9,6 +9,9 @@ namespace CivicSurvival.Domains.Corruption.Systems
 {
     public partial class CorruptionStateUpdateSystem : IDefaultSerializable, IResettable, IPostLoadValidation, IBootDefaultsReset
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         public void ResetToBootDefaults(ResetReason reason) => ResetBootDefaultsFields();
 
 #pragma warning disable CIVIC221 // Deferred: Deserialize → m_RestoredExposure → ValidateAfterLoad writes singleton. Serialize reads singleton directly.

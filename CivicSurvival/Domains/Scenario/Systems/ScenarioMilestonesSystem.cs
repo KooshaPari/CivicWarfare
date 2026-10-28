@@ -23,6 +23,9 @@ namespace CivicSurvival.Domains.Scenario.Systems
     [ActIndependent]
     public partial class ScenarioMilestonesSystem : CivicSystemBase, IDefaultSerializable, IResettable, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private const int VICTORY_YEAR_DAYS = 365;
 
         private static readonly LogContext Log = new("ScenarioMilestonesSystem");
