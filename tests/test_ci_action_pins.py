@@ -8,7 +8,10 @@ ROOT = Path(__file__).parents[1]
 WORKFLOWS = ROOT / ".github" / "workflows"
 CI_WORKFLOW = WORKFLOWS / "ci.yml"
 ACTION_KEY = re.compile(r"^\s*(?:-\s*)?uses:\s+(?P<ref>[^\s#]+)")
-IMMUTABLE_ACTION = re.compile(r"^\s*(?:-\s*)?uses:\s+[^\s@]+@[0-9a-f]{40}\s+#\s+\S.*$")
+# The ref must be exactly 40 hex characters followed by a provenance comment.
+# Hex is matched case-insensitively because GitHub resolves an uppercase SHA
+# to the same commit, so rejecting it would be a false positive.
+IMMUTABLE_ACTION = re.compile(r"^\s*(?:-\s*)?uses:\s+[^\s@]+@[0-9a-fA-F]{40}\s+#\s+\S.*$")
 
 
 def _workflow(path: Path) -> dict:
@@ -41,6 +44,28 @@ def test_all_workflow_actions_use_immutable_commits_with_provenance_comments():
 
     assert action_lines, "workflows must invoke at least one external action"
     assert all(IMMUTABLE_ACTION.match(line) for _, _, line in action_lines), action_lines
+
+
+def test_uppercase_sha_is_accepted_as_an_immutable_ref():
+    """GitHub resolves an uppercase SHA to the same commit as its lowercase form."""
+    line = "      - uses: actions/checkout@" + "A" * 40 + " # v4.4.0"
+    assert IMMUTABLE_ACTION.match(line), "an uppercase SHA is a valid immutable ref"
+
+
+def test_over_length_sha_is_rejected():
+    """A 41-character hex string is not a commit SHA."""
+    line = "      - uses: actions/checkout@" + "a" * 41 + " # v4.4.0"
+    assert not IMMUTABLE_ACTION.match(line), "a 41-character ref must not be accepted"
+
+
+def test_double_at_refs_are_not_mistaken_for_pins():
+    """A ``uses:`` line with two ``@`` signs is malformed, not pinned.
+
+    GitHub resolves the whole trailing token as the ref, so such a line never
+    resolves to a real commit.
+    """
+    line = "      - uses: actions/checkout@" + "a" * 40 + "@" + "b" * 40 + " # v4.4.0"
+    assert not IMMUTABLE_ACTION.match(line), "a double-@ ref must not be accepted as a pin"
 
 
 def test_ci_checkouts_do_not_persist_credentials():
