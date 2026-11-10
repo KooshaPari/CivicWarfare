@@ -28,6 +28,8 @@ namespace CivicSurvival.Domains.Engineering.Systems
     [ActIndependent]
     public partial class PowerCapacityIndexSystem : ThrottledSystemBase, IPostLoadValidation
     {
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("PowerCapacityIndexSystem");
 
         protected override int UpdateInterval => Engine.Timing.UPDATE_INTERVAL_500_MS;

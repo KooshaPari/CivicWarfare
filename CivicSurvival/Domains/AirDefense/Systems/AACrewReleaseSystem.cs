@@ -39,6 +39,9 @@ namespace CivicSurvival.Domains.AirDefense.Systems
     [ActIndependent]
     public partial class AACrewReleaseSystem : CivicSystemBase, IResettable, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static int s_EcbCommandCount;
         public static int EcbCommandCount => Volatile.Read(ref s_EcbCommandCount);
         public static void ResetCounters() => Interlocked.Exchange(ref s_EcbCommandCount, 0);

@@ -15,6 +15,9 @@ namespace CivicSurvival.Domains.Blackout.Systems
 {
     public partial class BlackoutSystem : IBootDefaultsReset, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         [System.NonSerialized] private DistrictSerializationData m_PendingDistrictLoadData;
         [System.NonSerialized] private bool m_HasPendingDistrictLoadData;
 

@@ -20,6 +20,8 @@ namespace CivicSurvival.Domains.Narrative.Resolvers
     public sealed class ThreatNarrativeResolver : INarrativeResolver
 #pragma warning restore CIVIC252
     {
+        public void NotifyDeserialized() { }
+
         public string Domain => "Threat";
 
         private const int LARGE_BATCH_THRESHOLD = 50;

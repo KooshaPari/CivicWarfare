@@ -44,6 +44,9 @@ namespace CivicSurvival.Domains.Waves.Systems
     [ActIndependent]
     public partial class ThreatTargetCacheSystem : ThrottledSystemBase, IThreatTargetSource, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("ThreatTargetCache");
 
         private EntityQuery m_PowerPlantQuery;

@@ -61,6 +61,8 @@ namespace CivicSurvival.Domains.Engineering.Systems
     public partial class GridStressSystem : ThrottledSystemBase, IPostLoadValidation, ICollapseOwnerVersionReader, ICivicSingletonOwner<GridStressData>
 #pragma warning restore CIVIC317
     {
+        public void PurgeAfterLoad() { }
+
         // ECB command counter (encapsulated to avoid CA2211)
         private static int s_EcbCommandCount;
         public static int EcbCommandCount => Volatile.Read(ref s_EcbCommandCount);

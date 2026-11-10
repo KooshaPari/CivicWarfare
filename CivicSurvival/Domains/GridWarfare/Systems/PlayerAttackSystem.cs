@@ -32,6 +32,8 @@ namespace CivicSurvival.Domains.GridWarfare.Systems
     /// </summary>
     public partial class PlayerAttackSystem : CivicSystemBase, IPostLoadValidation, IOperationSlotReader
     {
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("PlayerAttackSystem");
 
         private const int MAX_SLOTS = 3;

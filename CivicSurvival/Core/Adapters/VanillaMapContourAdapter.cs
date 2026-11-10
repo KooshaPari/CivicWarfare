@@ -23,6 +23,9 @@ namespace CivicSurvival.Core.Adapters
     [ActIndependent]
     public partial class VanillaMapContourAdapter : ThrottledSystemBase, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("VanillaMapContourAdapter");
 
         // Empty geometry payload (no coast, no water). UI parses this to "draw nothing

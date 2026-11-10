@@ -42,6 +42,8 @@ namespace CivicSurvival.Domains.ShadowEconomy.Systems
     public partial class ShadowWalletSystem : CivicSystemBase, IShadowWalletService, IPostLoadValidation, ICivicSingletonOwner<ShadowWalletSingleton>, IActGatedSystem
 #pragma warning restore CIVIC173
     {
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("ShadowWalletSystem");
 
         private EntityQuery m_WalletQuery;

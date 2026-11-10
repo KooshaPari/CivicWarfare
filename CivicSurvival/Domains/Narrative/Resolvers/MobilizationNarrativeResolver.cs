@@ -22,6 +22,9 @@ namespace CivicSurvival.Domains.Narrative.Resolvers
     public sealed class MobilizationNarrativeResolver : INarrativeResolver
 #pragma warning restore CIVIC252
     {
+        public void NotifyDeserialized() { }
+        public void Reset() { }
+
         public string Domain => "Mobilization";
 
         private static readonly LogContext Log = new("MobilizationNarrativeResolver");

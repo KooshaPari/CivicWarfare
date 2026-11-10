@@ -21,6 +21,8 @@ namespace CivicSurvival.Core.Interfaces.Core
     /// <code>
     /// public partial class FooAggregatorSystem : ThrottledSystemBase, IInitializable
     /// {
+    ///     public int InitOrder => InitPriority.DEFAULT;
+    ///
     ///     public void OnInitialize() => ComputeAndWriteSingleton(deltaSeconds: 0f);
     ///
     ///     protected override void OnThrottledUpdate() =>
@@ -34,7 +36,7 @@ namespace CivicSurvival.Core.Interfaces.Core
         /// Execution order. Lower = earlier. Default: <see cref="InitPriority.DEFAULT"/>.
         /// Use <see cref="InitPriority"/> constants when one initializer depends on another's output.
         /// </summary>
-        int InitOrder => InitPriority.DEFAULT;
+        int InitOrder { get; }
 
         /// <summary>
         /// Compute initial derived state. Called once per game load, before any throttled

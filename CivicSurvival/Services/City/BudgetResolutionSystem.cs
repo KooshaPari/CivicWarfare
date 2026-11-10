@@ -48,6 +48,9 @@ namespace CivicSurvival.Services.City
     [ActIndependent]
     public partial class BudgetResolutionSystem : CivicSystemBase, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("BudgetResolutionSystem");
 
         private EntityQuery m_AddFundsQuery;

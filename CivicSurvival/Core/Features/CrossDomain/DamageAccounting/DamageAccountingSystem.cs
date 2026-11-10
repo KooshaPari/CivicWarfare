@@ -76,6 +76,8 @@ namespace CivicSurvival.Core.Features.CrossDomain.DamageAccounting
     public partial class DamageAccountingSystem : CivicSystemBase, IPostLoadValidation, IRequestPurger
 #pragma warning restore CIVIC442
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+
         private static readonly LogContext Log = new("DamageAccountingSystem");
 
         private EntityQuery m_DamageEventQuery;

@@ -42,6 +42,9 @@ namespace CivicSurvival.Domains.Cognitive.Core.Systems
     [ActIndependent]
     public partial class CognitiveStatsAggregatorSystem : ThrottledSystemBase, IResettable, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("CognitiveStatsAggregatorSystem");
 
         private const float FALLBACK_BLACKOUT_VULN_MAX_BONUS = 0.30f;

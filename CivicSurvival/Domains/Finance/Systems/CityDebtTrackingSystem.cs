@@ -32,6 +32,9 @@ namespace CivicSurvival.Domains.Finance.Systems
         DisposePhase = SingletonLifecyclePhase.None)]
     public partial class CityDebtTrackingSystem : CivicSystemBase, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("CityDebtTrackingSystem");
         private const int DAYS_PER_BILLING_CYCLE = 30;
         private GameSimulationEndBarrier m_GameSimulationEndBarrier = null!;

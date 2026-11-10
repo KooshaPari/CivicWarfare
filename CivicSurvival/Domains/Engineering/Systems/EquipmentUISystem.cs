@@ -50,6 +50,8 @@ namespace CivicSurvival.Domains.Engineering.Systems
     [ActIndependent]
     public partial class EquipmentUISystem : ThrottledSystemBase, IEquipmentUIService, IPostLoadValidation
     {
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("EquipmentUISystem");
         private static readonly Comparison<PlantWearProducerData> s_DamageDescending = (a, b) =>
         {

@@ -42,6 +42,9 @@ namespace CivicSurvival.Domains.Scenario.Systems
     /// </summary>
     public partial class CrisisActCoordinator : ThrottledSystemBase, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("CrisisActCoordinator");
 
         // ===== State Tracking =====

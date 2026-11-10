@@ -51,11 +51,11 @@ namespace CivicSurvival.Core.Interfaces.Domain.Scenario
         /// (internal state resets to defaults on load ≠ actual state change).
         /// Resolvers without transition detection can leave the default no-op.
         /// </summary>
-        void NotifyDeserialized() { }
+        void NotifyDeserialized();
 
         /// <summary>
         /// Called on new game. Reset all internal state.
         /// </summary>
-        void Reset() { }
+        void Reset();
     }
 }

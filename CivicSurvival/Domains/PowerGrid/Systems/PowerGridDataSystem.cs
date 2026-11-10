@@ -39,6 +39,9 @@ namespace CivicSurvival.Domains.PowerGrid.Systems
     [ActIndependent]
     public partial class PowerGridDataSystem : ThrottledSystemBase, IResettable, IServedLoadVersionReader, IPostLoadValidation, ICivicSingletonOwner<PowerGridSingleton>
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("PowerGridData");
 
         private EntityQuery m_ProducerQuery;

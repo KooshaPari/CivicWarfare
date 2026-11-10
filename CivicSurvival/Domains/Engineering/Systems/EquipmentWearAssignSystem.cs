@@ -28,6 +28,8 @@ namespace CivicSurvival.Domains.Engineering.Systems
     [ActIndependent]
     public partial class EquipmentWearAssignSystem : ThrottledSystemBase, IPostLoadValidation
     {
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("EquipmentWearAssignSystem");
 
         protected override int UpdateInterval => BalanceConfig.Current.EquipmentWear.UpdateIntervalFrames;

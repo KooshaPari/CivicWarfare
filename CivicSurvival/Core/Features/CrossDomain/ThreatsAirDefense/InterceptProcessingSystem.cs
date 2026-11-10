@@ -59,6 +59,9 @@ namespace CivicSurvival.Core.Features.CrossDomain.ThreatsAirDefense
         Justification = "Stale InterceptRequest is purged in PurgeAfterLoad; the intercepted-drone teardown the request drives is reconciled by ThreatLoadRenderReinitSystem (ModificationEnd, pause-safe) from the persisted ShahedCombatState/BallisticInterceptState markers (C1).")]
     public partial class InterceptProcessingSystem : CivicSystemBase, IPostLoadValidation, IInitializable, IRequestPurger
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public int InitOrder => CivicSurvival.Core.Interfaces.Core.InitPriority.DEFAULT;
+
         // ECB command counter (encapsulated to avoid CA2211)
         private static int s_EcbCommandCount;
         public static int EcbCommandCount => Volatile.Read(ref s_EcbCommandCount);

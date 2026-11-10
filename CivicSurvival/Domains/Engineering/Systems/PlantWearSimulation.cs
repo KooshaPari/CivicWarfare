@@ -60,6 +60,8 @@ namespace CivicSurvival.Domains.Engineering.Systems
         Justification = "EquipmentWear lives on plant sidecar entities. This system owns the persisted StablePlantId counter, the runtime StablePlantId→entity map, the wear-job lifecycle, expired-repair completion, post-load reconcile, and the IPlantWearReader service surface. Pause-safe plant repair reads this system's map via the RefreshPlantIdMap entry point at intake/commit boundaries.")]
     public partial class PlantWearSimulation : ThrottledSystemBase, IPostLoadValidation, IPlantWearReader, IActGatedSystem
     {
+        public void PurgeAfterLoad() { }
+
         // --- ECB diagnostics ---
         private static int s_EcbCommandCount;
         public static int EcbCommandCount => Volatile.Read(ref s_EcbCommandCount);

@@ -56,6 +56,9 @@ namespace CivicSurvival.Domains.Cognitive.Core.Systems
     [ActIndependent]
     public partial class CognitiveStateSystem : ThrottledSystemBase, IResettable, IPostLoadValidation, ICivicSingletonOwner<CognitiveState>
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("CognitiveStateSystem");
 
         private static PenaltySource InternetModeToPenalty(GlobalInternetMode mode) => mode switch

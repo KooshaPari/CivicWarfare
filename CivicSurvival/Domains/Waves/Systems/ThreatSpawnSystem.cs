@@ -41,6 +41,9 @@ namespace CivicSurvival.Domains.Waves.Systems
     [ActIndependent]
     public partial class ThreatSpawnSystem : CivicSystemBase, IPostLoadValidation, IOutboundStrikeService
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         // Outbound counter-strike frontier (developer fork #2): an outbound projectile has no
         // building target on the player's map — it flies toward a notional enemy beachhead past
         // the map edge. The launch point is the map centre; the target is this many metres beyond

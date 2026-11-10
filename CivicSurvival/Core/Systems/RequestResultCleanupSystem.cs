@@ -19,6 +19,8 @@ namespace CivicSurvival.Core.Systems
     [ActIndependent]
     public partial class RequestResultCleanupSystem : CivicSystemBase, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+
         private static readonly LogContext Log = new("RequestResultCleanup");
 
         private const double ReportedTtlSeconds = 10d;

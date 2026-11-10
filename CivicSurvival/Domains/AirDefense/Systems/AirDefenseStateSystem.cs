@@ -71,6 +71,9 @@ namespace CivicSurvival.Domains.AirDefense.Systems
         DisposePhase = SingletonLifecyclePhase.OnDestroy)]
     public partial class AirDefenseStateSystem : CivicSystemBase, IPostLoadValidation, IResettable, IAirDefenseCreditsReader, IAirDefenseStatsReader, IPatriotDroneInterceptReader, IPatriotDroneToggleCommandService, IAutoResupplyReader, IAutoResupplyToggleCommandService, ICivicSingletonOwner<AirDefenseCreditsSingleton>
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("AirDefenseStateSystem");
 
         private EntityQuery m_SingletonQuery;

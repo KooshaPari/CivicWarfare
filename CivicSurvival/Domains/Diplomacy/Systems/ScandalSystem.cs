@@ -29,6 +29,9 @@ namespace CivicSurvival.Domains.Diplomacy.Systems
     [ActIndependent]
     public partial class ScandalSystem : CivicSystemBase, IDefaultSerializable, IResettable, IBootDefaultsReset, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("ScandalSystem");
         private static float ScandalPenaltyCap => BalanceConfig.Current.Countermeasures.ScandalPenaltyCap;
 

@@ -52,6 +52,9 @@ namespace CivicSurvival.Domains.Attention.Systems
         , IShockDebugMutator
 #endif
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("WorldShockSystem");
 
         private EntityQuery m_StateQuery;

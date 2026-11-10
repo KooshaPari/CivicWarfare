@@ -45,6 +45,9 @@ namespace CivicSurvival.Domains.Intel.Systems
     public partial class IntelStateSystem : ThrottledSystemBase, IDefaultSerializable, IResettable, IPostLoadValidation
 #pragma warning restore CIVIC228
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         // ===== Tension level constants =====
         private const int TENSION_ALERT = 75;
         private const int TENSION_RECOVERY = 25;

@@ -26,6 +26,9 @@ namespace CivicSurvival.Domains.Tutorial.Systems
     /// </summary>
     public partial class MilestoneTutorialSystem : CivicUISystemBase, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("MilestoneTutorial");
 
         // Cached ModalFlags → string (avoids ToString() allocation on each call)

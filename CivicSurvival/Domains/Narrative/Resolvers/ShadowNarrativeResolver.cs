@@ -23,6 +23,8 @@ namespace CivicSurvival.Domains.Narrative.Resolvers
     public sealed class ShadowNarrativeResolver : INarrativeResolver
 #pragma warning restore CIVIC252
     {
+        public void NotifyDeserialized() { }
+
         public string Domain => "Shadow";
 
         private static readonly LogContext Log = new("ShadowNarrativeResolver");

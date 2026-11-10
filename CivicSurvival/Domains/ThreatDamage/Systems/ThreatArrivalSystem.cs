@@ -40,6 +40,9 @@ namespace CivicSurvival.Domains.ThreatDamage.Systems
     [ActIndependent]
     public partial class ThreatArrivalSystem : CivicSystemBase, IResettable, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("ThreatArrivalSystem");
 
         // ECB command counter (encapsulated to avoid CA2211)

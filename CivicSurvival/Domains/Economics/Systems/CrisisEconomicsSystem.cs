@@ -73,6 +73,9 @@ namespace CivicSurvival.Domains.Economics.Systems
         DisposePhase = SingletonLifecyclePhase.None)]
     public partial class CrisisEconomicsSystem : CivicUISystemBase, IDefaultSerializable, IResettable, IPostLoadValidation, ICivicSingletonOwner<EconomySingleton>, ICivicSingletonOwner<CommerceRateRegistry>, IEconomyDebugMutator
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("CrisisEconomics");
 
         // ===== Integrity Gradient Thresholds =====

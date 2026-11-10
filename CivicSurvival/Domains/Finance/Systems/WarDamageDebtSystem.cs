@@ -29,6 +29,9 @@ namespace CivicSurvival.Domains.Finance.Systems
     [ActIndependent]
     public partial class WarDamageDebtSystem : CivicSystemBase, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("WarDamageDebtSystem");
         private GameSimulationEndBarrier m_GameSimulationEndBarrier = null!;
         private EntityQuery m_EmergencyFundQuery;

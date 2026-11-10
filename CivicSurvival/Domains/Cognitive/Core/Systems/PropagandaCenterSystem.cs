@@ -43,6 +43,9 @@ namespace CivicSurvival.Domains.Cognitive.Core.Systems
     [ActIndependent]
     public sealed partial class PropagandaCenterSystem : ThrottledSystemBase, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("PropagandaCenterSystem");
 
         protected override int UpdateInterval => Engine.Timing.UPDATE_INTERVAL_1_SECOND;

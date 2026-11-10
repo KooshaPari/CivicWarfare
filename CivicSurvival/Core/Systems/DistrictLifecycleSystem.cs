@@ -34,6 +34,9 @@ namespace CivicSurvival.Core.Systems
     [ActIndependent]
     public partial class DistrictLifecycleSystem : CivicSystemBase, IResettable, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("DistrictLifecycle");
 
         // Track known districts: Index → Version

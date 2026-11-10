@@ -52,6 +52,9 @@ namespace CivicSurvival.Core.Features.Wellbeing
     [ActIndependent]
     public partial class WellbeingResolverSystem : CivicSystemBase, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("WellbeingResolverSystem");
 
         private EntityQuery m_HouseholdQuery;

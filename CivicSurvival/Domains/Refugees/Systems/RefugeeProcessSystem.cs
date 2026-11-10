@@ -46,6 +46,9 @@ namespace CivicSurvival.Domains.Refugees.Systems
     [ActIndependent]
     public partial class RefugeeProcessSystem : CivicSystemBase, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("RefugeeProcessSystem");
 
         private EntityQuery m_PendingQuery;

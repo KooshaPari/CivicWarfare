@@ -51,6 +51,8 @@ namespace CivicSurvival.Domains.Engineering.Systems
     [TransientConsumerReconcile(typeof(RepairCompletedEvent), ReconcileMode.OwnsDurableOutbox, DurableState = typeof(DisabledByDisaster))]
     public partial class PowerPlantDisasterSystem : ThrottledSystemBase, IPostLoadValidation, IDisasterRepairSink, IActGatedSystem
     {
+        public void PurgeAfterLoad() { }
+
         // ECB command counter (encapsulated to avoid CA2211)
         private static int s_EcbCommandCount;
         public static int EcbCommandCount => Volatile.Read(ref s_EcbCommandCount);

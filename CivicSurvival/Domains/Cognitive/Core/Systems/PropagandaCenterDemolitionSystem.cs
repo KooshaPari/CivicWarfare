@@ -38,6 +38,9 @@ namespace CivicSurvival.Domains.Cognitive.Core.Systems
     [ActIndependent]
     public partial class PropagandaCenterDemolitionSystem : CivicSystemBase, IResettable, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("PropagandaCenterDemolition");
 
         private EntityQuery m_InstallQuery;

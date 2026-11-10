@@ -39,6 +39,9 @@ namespace CivicSurvival.Domains.AirDefense.Systems
     [ActIndependent]
     public sealed partial class LiveAACacheSystem : CivicSystemBase, IPostLoadValidation, IAirDefenseCoverageReader
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("LiveAACacheSystem");
 
         // Gate query: AA-type only, no Simulate (vanilla Simulate churn must not bump the cursor).

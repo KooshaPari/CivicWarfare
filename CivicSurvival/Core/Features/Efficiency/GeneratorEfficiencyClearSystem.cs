@@ -21,6 +21,8 @@ namespace CivicSurvival.Core.Features.Efficiency
     public partial class GeneratorEfficiencyClearSystem
         : ThrottledSystemBase, IInitializable, ICivicSingletonOwner<GeneratorEfficiency>
     {
+        public int InitOrder => CivicSurvival.Core.Interfaces.Core.InitPriority.DEFAULT;
+
         private static readonly LogContext Log = new("GeneratorEfficiencyClearSystem");
 
         private EntityQuery m_EfficiencyQuery;

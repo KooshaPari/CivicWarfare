@@ -43,6 +43,9 @@ namespace CivicSurvival.Domains.Refugees.Systems
     /// </summary>
     public partial class RefugeeInfluxCoordinator : CivicSystemBase, IDefaultSerializable, IResettable, IPostLoadValidation, IBootDefaultsReset
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("RefugeeInfluxCoordinator");
 
         /// <summary>Current spawn rate multiplier based on act.</summary>

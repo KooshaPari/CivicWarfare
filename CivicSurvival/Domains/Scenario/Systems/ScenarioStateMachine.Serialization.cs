@@ -12,6 +12,9 @@ namespace CivicSurvival.Domains.Scenario.Systems
 {
     public partial class ScenarioStateMachine : IDefaultSerializable, IResettable, IPostLoadValidation, IBootDefaultsReset
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         public void ResetToBootDefaults(ResetReason reason)
         {
             m_State = ScenarioState.CreateDefault();

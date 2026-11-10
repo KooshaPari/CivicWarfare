@@ -66,6 +66,8 @@ namespace CivicSurvival.Domains.Corruption.Systems
         , IReputationDebugMutator
 #endif
     {
+        public void PurgeAfterLoad() { }
+
         private const float TRUSTED_THRESHOLD = 50f;
 
         private static readonly LogContext Log = new("ShadowReputation");

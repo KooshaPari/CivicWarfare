@@ -59,6 +59,9 @@ namespace CivicSurvival.Domains.GridWarfare.Systems
         ICounterAttackArsenalService,
         IDefaultSerializable, IResettable, IBootDefaultsReset, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("CounterAttackArsenal");
 
 

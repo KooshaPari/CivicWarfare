@@ -31,6 +31,8 @@ namespace CivicSurvival.Core.Features.Population
         IResidentPopulationEligibilityView,
         IPostLoadValidation
     {
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("ResidentPopulationModel");
 
         private const int INITIAL_HOUSEHOLD_CAPACITY = 1024;

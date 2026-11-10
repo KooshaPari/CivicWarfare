@@ -25,6 +25,9 @@ namespace CivicSurvival.Domains.Refugees.Systems
     /// </summary>
     public partial class RefugeeMigrationSystem : IDefaultSerializable, IResettable, IBootDefaultsReset, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         // Post-load reconcile reads m_TempHome to recompute the NeedsRefugeeRelocation
         // marker presence. Declared here, co-located with its only user (ValidateAfterLoad);
         // initialized in OnCreate (main partial). .Update(this) is called in

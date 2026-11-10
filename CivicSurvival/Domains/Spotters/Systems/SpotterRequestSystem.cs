@@ -36,6 +36,10 @@ namespace CivicSurvival.Domains.Spotters.Systems
     [ActIndependent]
     public partial class SpotterRequestSystem : CivicSystemBase, IPostLoadValidation, IBuildingRefRebindOwner
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+        public int RebindOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+
         // ECB command counter (encapsulated to avoid CA2211)
         private static int s_EcbCommandCount;
         public static int EcbCommandCount => Volatile.Read(ref s_EcbCommandCount);

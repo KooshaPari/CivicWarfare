@@ -12,7 +12,7 @@ namespace CivicSurvival.Core.Interfaces.Core
     public interface IBuildingRefRebindOwner
     {
         /// <summary>Lower values run earlier during the post-load rebind phase.</summary>
-        int RebindOrder => HydrationPriority.DEFAULT;
+        int RebindOrder { get; }
 
         /// <summary>
         /// Component types this owner has reconciled. Post-load cleanup for these

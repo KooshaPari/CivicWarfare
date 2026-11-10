@@ -52,6 +52,9 @@ namespace CivicSurvival.Domains.Cognitive.Core.Systems
     [ActIndependent]
     public partial class HeroDeploymentSystem : ThrottledSystemBase, IResettable, IPostLoadValidation, ICivicSingletonOwner<HeroDeploymentState>
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         protected override int UpdateInterval => Engine.Timing.UPDATE_INTERVAL_500_MS;
 
         private const double PenaltySystemRetryDelaySeconds = 60d;

@@ -29,6 +29,9 @@ namespace CivicSurvival.Domains.Cognitive.Core.Systems
     [ActIndependent]
     public sealed partial class TelecomBroadcastCacheSystem : ThrottledSystemBase, IBroadcastCoverageReader, IPostLoadValidation
     {
+        public int HydrationOrder => CivicSurvival.Core.Interfaces.Core.HydrationPriority.DEFAULT;
+        public void PurgeAfterLoad() { }
+
         private static readonly LogContext Log = new("TelecomBroadcastCacheSystem");
 
         protected override int UpdateInterval => Engine.Timing.UPDATE_INTERVAL_1_SECOND;
